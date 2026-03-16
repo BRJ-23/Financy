@@ -2,7 +2,10 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const Database = require('better-sqlite3');
 
-const dbPath = path.join(app.getPath('userData'), 'finanzas.db');
+// Modo test
+const isTestMode = process.env.NODE_ENV === 'test';
+
+const dbPath = isTestMode ? ':memory:' : path.join(app.getPath('userData'), 'finanzas.db');
 const db = new Database(dbPath);
 
 db.exec(`
@@ -26,6 +29,7 @@ function createWindow() {
   });
 
   win.loadFile('app/index.html');
+  // win.webContents.openDevTools(); // Ver la consola de errores
 }
 
 app.whenReady().then(createWindow);
