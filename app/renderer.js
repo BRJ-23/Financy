@@ -57,8 +57,8 @@ function initializeMonthlyTabs() {
             <div class="amount" id="${month}-income-total">€0</div>
             <div class="input-section" style="padding: 10px 0; margin: 0;">
               <div class="input-group" style="flex-direction: column; gap: 8px;">
-                <input type="number" id="${month}-income-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
                 <input type="text" id="${month}-income-description" placeholder="Descripción (ej: Salario)" style="min-width: auto;">
+                <input type="number" id="${month}-income-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
                 <button onclick="addIncome('${month}')" style="margin: 0;">Añadir Ingreso</button>
               </div>
             </div>
@@ -75,8 +75,8 @@ function initializeMonthlyTabs() {
             <small id="${month}-monthly-info" style="color: #6b7280;">Usado: €0 / €0</small>
             <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
               <div class="input-group" style="flex-direction: column; gap: 8px;">
-                <input type="number" id="${month}-monthly-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
                 <input type="text" id="${month}-monthly-description" placeholder="Descripción" style="min-width: auto;">
+                <input type="number" id="${month}-monthly-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
                 <button onclick="addExpense('${month}', 'monthly')" style="margin: 0;">Añadir Gasto</button>
               </div>
             </div>
@@ -93,8 +93,8 @@ function initializeMonthlyTabs() {
             <small id="${month}-personal-info" style="color: #6b7280;">Usado: €0 / €0</small>
             <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
               <div class="input-group" style="flex-direction: column; gap: 8px;">
-                <input type="number" id="${month}-personal-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
                 <input type="text" id="${month}-personal-description" placeholder="Descripción" style="min-width: auto;">
+                <input type="number" id="${month}-personal-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
                 <button onclick="addExpense('${month}', 'personal')" style="margin: 0;">Añadir Gasto</button>
               </div>
             </div>
@@ -111,8 +111,8 @@ function initializeMonthlyTabs() {
             <small id="${month}-investment-info" style="color: #6b7280;">Usado: €0 / €0</small>
             <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
               <div class="input-group" style="flex-direction: column; gap: 8px;">
-                <input type="number" id="${month}-investment-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
                 <input type="text" id="${month}-investment-description" placeholder="Descripción" style="min-width: auto;">
+                <input type="number" id="${month}-investment-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
                 <button onclick="addExpense('${month}', 'investment')" style="margin: 0;">Añadir Gasto</button>
               </div>
             </div>
@@ -208,13 +208,14 @@ function updateIncomeDisplay(month) {
   const incomeList = document.getElementById(`${month}-income-list`);
   incomeList.innerHTML = '';
   
-  budget.incomes.forEach((income) => {
+  budget.incomes.forEach((income, index) => {
     incomeList.innerHTML += `
       <div class="expense-item">
         <div>
           <div class="label">${income.description}</div>
         </div>
         <div class="value" style="color: #10b981;">+€${income.amount.toFixed(2)}</div>
+        <button class="delete-item-btn" onclick="deleteIncome('${month}', ${index})">✕</button>
       </div>
     `;
   });
@@ -370,13 +371,15 @@ function updateExpenseDisplay(month) {
   const monthlyExpensesList = document.getElementById(`${month}-monthly-list`);
   monthlyExpensesList.innerHTML = '';
   
-  budget.expenses.filter(e => e.type === 'monthly').forEach((expense) => {
+  const monthlyExpenses = budget.expenses.map((e, i) => ({ ...e, globalIndex: i })).filter(e => e.type === 'monthly');
+  monthlyExpenses.forEach((expense) => {
     monthlyExpensesList.innerHTML += `
       <div class="expense-item">
         <div>
           <div class="label">${expense.description}</div>
         </div>
         <div class="value">-€${expense.amount.toFixed(2)}</div>
+        <button class="delete-item-btn" onclick="deleteExpense('${month}', ${expense.globalIndex})">✕</button>
       </div>
     `;
   });
@@ -384,13 +387,15 @@ function updateExpenseDisplay(month) {
   const personalExpensesList = document.getElementById(`${month}-personal-list`);
   personalExpensesList.innerHTML = '';
   
-  budget.expenses.filter(e => e.type === 'personal').forEach((expense) => {
+  const personalExpenses = budget.expenses.map((e, i) => ({ ...e, globalIndex: i })).filter(e => e.type === 'personal');
+  personalExpenses.forEach((expense) => {
     personalExpensesList.innerHTML += `
       <div class="expense-item">
         <div>
           <div class="label">${expense.description}</div>
         </div>
         <div class="value">-€${expense.amount.toFixed(2)}</div>
+        <button class="delete-item-btn" onclick="deleteExpense('${month}', ${expense.globalIndex})">✕</button>
       </div>
     `;
   });
@@ -398,16 +403,34 @@ function updateExpenseDisplay(month) {
   const investmentExpensesList = document.getElementById(`${month}-investment-list`);
   investmentExpensesList.innerHTML = '';
   
-  budget.expenses.filter(e => e.type === 'investment').forEach((expense) => {
+  const investmentExpenses = budget.expenses.map((e, i) => ({ ...e, globalIndex: i })).filter(e => e.type === 'investment');
+  investmentExpenses.forEach((expense) => {
     investmentExpensesList.innerHTML += `
       <div class="expense-item">
         <div>
           <div class="label">${expense.description}</div>
         </div>
         <div class="value">-€${expense.amount.toFixed(2)}</div>
+        <button class="delete-item-btn" onclick="deleteExpense('${month}', ${expense.globalIndex})">✕</button>
       </div>
     `;
   });
+}
+
+function deleteIncome(month, index) {
+  const budget = monthlyBudgets[month];
+  budget.incomes.splice(index, 1);
+  budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
+  updateIncomeDisplay(month);
+  updateBudgetAllocations(month);
+  updateSavingsChart();
+}
+
+function deleteExpense(month, index) {
+  const budget = monthlyBudgets[month];
+  budget.expenses.splice(index, 1);
+  updateExpenseDisplay(month);
+  updateSavingsChart();
 }
 
 function initializeSavingsChart() {
