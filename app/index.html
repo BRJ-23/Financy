@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Gestión Financiera</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f3f4f6; color: #333; }
+    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    input, button { padding: 10px; margin-right: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button { background-color: #2563eb; color: white; border: none; cursor: pointer; font-weight: bold; }
+    button:hover { background-color: #1d4ed8; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+    th { background-color: #f8fafc; }
+  </style>
+</head>
+<body>
+
+  <h1>Administración</h1>
+
+  <div class="card">
+    <h3>Nuevo Registro</h3>
+    <input type="text" id="concepto" placeholder="Ej. Compra Supermercado" required>
+    <input type="number" id="importe" placeholder="Importe (€)" step="0.01" required>
+    <button onclick="agregar()">Añadir Movimiento</button>
+  </div>
+
+  <div class="card">
+    <h3>Historial de Movimientos</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Fecha</th>
+          <th>Concepto</th>
+          <th>Importe</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-datos">
+        </tbody>
+    </table>
+  </div>
+
+  <script>
+    async function cargarDatos() {
+      const movimientos = await window.api.obtenerMovimientos();
+      const tbody = document.getElementById('tabla-datos');
+      tbody.innerHTML = '';
+
+      movimientos.forEach(mov => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${mov.id}</td>
+            <td>${mov.fecha}</td>
+            <td>${mov.concepto}</td>
+            <td><strong>${mov.importe} €</strong></td>
+          </tr>
+        `;
+      });
+    }
+
+    function agregar() {
+      const concepto = document.getElementById('concepto').value;
+      const importe = parseFloat(document.getElementById('importe').value);
+      
+      if (!concepto || isNaN(importe)) {
+        alert("Por favor, rellena los campos correctamente.");
+        return;
+      }
+
+      const fecha = new Date().toLocaleDateString('es-ES');
+
+      window.api.guardarMovimiento({ concepto, importe, fecha });
+
+      document.getElementById('concepto').value = '';
+      document.getElementById('importe').value = '';
+      
+      setTimeout(cargarDatos, 100); 
+    }
+
+    cargarDatos();
+  </script>
+</body>
+</html>
