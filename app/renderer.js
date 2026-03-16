@@ -55,9 +55,6 @@ function initializeMonthlyTabs() {
           <div class="category-card income">
             <h3>Ingresos</h3>
             <div class="amount" id="${month}-income-total">€0</div>
-            <div style="height: 150px; width: 100%; position: relative; margin-bottom: 15px;">
-              <canvas id="${month}-income-chart"></canvas>
-            </div>
             <div class="input-section" style="padding: 10px 0; margin: 0;">
               <div class="input-group" style="flex-direction: column; gap: 8px;">
                 <input type="number" id="${month}-income-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
@@ -122,9 +119,6 @@ function initializeMonthlyTabs() {
           <div class="category-card savings">
             <h3>Ahorro Total</h3>
             <div class="amount" id="${month}-savings-display">€0</div>
-            <div style="height: 150px; width: 100%; position: relative;">
-              <canvas id="${month}-savings-chart"></canvas>
-            </div>
             <small id="${month}-savings-info" style="color: #6b7280;">Base: €0 + Sobrantes</small>
           </div>
         </div>
@@ -208,13 +202,6 @@ function updateIncomeDisplay(month) {
   const budget = monthlyBudgets[month];
 
   document.getElementById(`${month}-income-total`).textContent = `€${budget.totalIncome.toFixed(2)}`;
-
-  const incomeChart = document.getElementById(`${month}-income-chart`).chart;
-  if (incomeChart) {
-    incomeChart.data.datasets[0].data = [budget.totalIncome, 0];
-    incomeChart.update();
-  }
-
   const incomeList = document.getElementById(`${month}-income-list`);
   incomeList.innerHTML = '';
   
@@ -257,38 +244,15 @@ function createCategoryCharts(month) {
   const budget = monthlyBudgets[month];
 
   const chartIds = [
-    `${month}-income-chart`,
     `${month}-monthly-chart`,
     `${month}-personal-chart`,
-    `${month}-investment-chart`,
-    `${month}-savings-chart`
+    `${month}-investment-chart`
   ];
   
   chartIds.forEach(chartId => {
     const canvasElement = document.getElementById(chartId);
     if (canvasElement && canvasElement.chart) {
       canvasElement.chart.destroy();
-    }
-  });
-  
-  const incomeCtx = document.getElementById(`${month}-income-chart`).getContext('2d');
-  document.getElementById(`${month}-income-chart`).chart = new Chart(incomeCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Ingresos', 'Meta'],
-      datasets: [{
-        data: [budget.totalIncome, Math.max(1000, budget.totalIncome)],
-        backgroundColor: ['#10b981', '#d1fae5'],
-        borderColor: ['#059669', '#a7f3d0'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      }
     }
   });
   
@@ -353,28 +317,7 @@ function createCategoryCharts(month) {
         legend: { display: false }
       }
     }
-  });
-  
-  const savingsCtx = document.getElementById(`${month}-savings-chart`).getContext('2d');
-  document.getElementById(`${month}-savings-chart`).chart = new Chart(savingsCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Ahorros', 'Presupuesto Base'],
-      datasets: [{
-        data: [0, budget.savings],
-        backgroundColor: ['#10b981', '#d1fae5'],
-        borderColor: ['#059669', '#a7f3d0'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      }
-    }
-  });
+  }); 
 }
 
 function updateExpenseDisplay(month) {
@@ -400,7 +343,6 @@ function updateExpenseDisplay(month) {
   const monthlyChart = document.getElementById(`${month}-monthly-chart`).chart;
   const personalChart = document.getElementById(`${month}-personal-chart`).chart;
   const investmentChart = document.getElementById(`${month}-investment-chart`).chart;
-  const savingsChart = document.getElementById(`${month}-savings-chart`).chart;
   
   if (monthlyChart) {
     monthlyChart.data.datasets[0].data = [monthlyUsed, monthlyLeftover];
@@ -415,11 +357,6 @@ function updateExpenseDisplay(month) {
   if (investmentChart) {
     investmentChart.data.datasets[0].data = [investmentUsed, investmentLeftover];
     investmentChart.update();
-  }
-  
-  if (savingsChart) {
-    savingsChart.data.datasets[0].data = [monthlyLeftover + personalLeftover + investmentLeftover, budget.savings];
-    savingsChart.update();
   }
   
   const monthlyExpensesList = document.getElementById(`${month}-monthly-list`);
