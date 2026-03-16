@@ -70,6 +70,7 @@ function initializeMonthlyTabs() {
             <div class="amount" id="${month}-monthly-display">€0</div>
             <div style="height: 150px; width: 100%; position: relative;">
               <canvas id="${month}-monthly-chart"></canvas>
+              <div id="${month}-monthly-center-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold; color: #374151; pointer-events: none;">€0.00</div>
             </div>
             <small id="${month}-monthly-info" style="color: #6b7280;">Usado: €0 / €0</small>
             <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
@@ -87,6 +88,7 @@ function initializeMonthlyTabs() {
             <div class="amount" id="${month}-personal-display">€0</div>
             <div style="height: 150px; width: 100%; position: relative;">
               <canvas id="${month}-personal-chart"></canvas>
+              <div id="${month}-personal-center-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold; color: #374151; pointer-events: none;">€0.00</div>
             </div>
             <small id="${month}-personal-info" style="color: #6b7280;">Usado: €0 / €0</small>
             <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
@@ -104,6 +106,7 @@ function initializeMonthlyTabs() {
             <div class="amount" id="${month}-investment-display">€0</div>
             <div style="height: 150px; width: 100%; position: relative;">
               <canvas id="${month}-investment-chart"></canvas>
+              <div id="${month}-investment-center-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold; color: #374151; pointer-events: none;">€0.00</div>
             </div>
             <small id="${month}-investment-info" style="color: #6b7280;">Usado: €0 / €0</small>
             <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
@@ -236,7 +239,6 @@ function updateBudgetAllocations(month) {
   document.getElementById(`${month}-savings-display`).textContent = `€${baseSavings.toFixed(2)}`;
   
   createCategoryCharts(month);
-  
   updateExpenseDisplay(month);
 }
 
@@ -260,9 +262,9 @@ function createCategoryCharts(month) {
   document.getElementById(`${month}-monthly-chart`).chart = new Chart(monthlyCtx, {
     type: 'doughnut',
     data: {
-      labels: ['Usado', 'Disponible'],
+      labels: ['Disponible', 'Usado'],
       datasets: [{
-        data: [0, budget.monthlyExpenses],
+        data: [budget.monthlyExpenses, 0],
         backgroundColor: ['#ef4444', '#fee2e2'],
         borderColor: ['#dc2626', '#fecaca'],
         borderWidth: 1
@@ -281,9 +283,9 @@ function createCategoryCharts(month) {
   document.getElementById(`${month}-personal-chart`).chart = new Chart(personalCtx, {
     type: 'doughnut',
     data: {
-      labels: ['Usado', 'Disponible'],
+      labels: ['Disponible', 'Usado'],
       datasets: [{
-        data: [0, budget.personalExpenses],
+        data: [budget.personalExpenses, 0],
         backgroundColor: ['#f59e0b', '#fef3c7'],
         borderColor: ['#d97706', '#fde68a'],
         borderWidth: 1
@@ -302,9 +304,9 @@ function createCategoryCharts(month) {
   document.getElementById(`${month}-investment-chart`).chart = new Chart(investmentCtx, {
     type: 'doughnut',
     data: {
-      labels: ['Usado', 'Disponible'],
+      labels: ['Disponible', 'Usado'],
       datasets: [{
-        data: [0, budget.investments],
+        data: [budget.investments, 0],
         backgroundColor: ['#8b5cf6', '#ede9fe'],
         borderColor: ['#7c3aed', '#ddd6fe'],
         borderWidth: 1
@@ -345,18 +347,24 @@ function updateExpenseDisplay(month) {
   const investmentChart = document.getElementById(`${month}-investment-chart`).chart;
   
   if (monthlyChart) {
-    monthlyChart.data.datasets[0].data = [monthlyUsed, monthlyLeftover];
+    monthlyChart.data.datasets[0].data = [monthlyLeftover, monthlyUsed];
     monthlyChart.update();
+    const monthlyCenterText = document.getElementById(`${month}-monthly-center-text`);
+    if (monthlyCenterText) monthlyCenterText.textContent = `€${monthlyLeftover.toFixed(2)}`;
   }
   
   if (personalChart) {
-    personalChart.data.datasets[0].data = [personalUsed, personalLeftover];
+    personalChart.data.datasets[0].data = [personalLeftover, personalUsed];
     personalChart.update();
+    const personalCenterText = document.getElementById(`${month}-personal-center-text`);
+    if (personalCenterText) personalCenterText.textContent = `€${personalLeftover.toFixed(2)}`;
   }
   
   if (investmentChart) {
-    investmentChart.data.datasets[0].data = [investmentUsed, investmentLeftover];
+    investmentChart.data.datasets[0].data = [investmentLeftover, investmentUsed];
     investmentChart.update();
+    const investmentCenterText = document.getElementById(`${month}-investment-center-text`);
+    if (investmentCenterText) investmentCenterText.textContent = `€${investmentLeftover.toFixed(2)}`;
   }
   
   const monthlyExpensesList = document.getElementById(`${month}-monthly-list`);
@@ -533,6 +541,16 @@ function updateSavingsChart() {
   savingsChart.update();
 }
 
+function openNewGoalModal() {
+  document.getElementById('new-goal-name').value = '';
+  document.getElementById('new-goal-amount').value = '';
+  document.getElementById('new-goal-modal').classList.add('open');
+}
+
+function closeNewGoalModal() {
+  document.getElementById('new-goal-modal').classList.remove('open');
+}
+
 function createInvestmentGoal() {
   const nameInput = document.getElementById('new-goal-name');
   const amountInput = document.getElementById('new-goal-amount');
@@ -561,6 +579,7 @@ function createInvestmentGoal() {
   nameInput.value = '';
   amountInput.value = '';
   
+  closeNewGoalModal();
   renderInvestmentGoals();
 }
 
@@ -636,6 +655,8 @@ function renderInvestmentGoals() {
 
 window.addIncome = addIncome;
 window.addExpense = addExpense;
+window.openNewGoalModal = openNewGoalModal;
+window.closeNewGoalModal = closeNewGoalModal;
 window.createInvestmentGoal = createInvestmentGoal;
 window.addFundsToGoal = addFundsToGoal;
 window.deleteInvestmentGoal = deleteInvestmentGoal;

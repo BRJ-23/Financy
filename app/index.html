@@ -81,12 +81,17 @@
     .goal-add-funds { display: flex; gap: 8px; margin-top: 15px; }
     .goal-add-funds input { flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; }
     .goal-add-funds button { padding: 8px 16px; font-size: 12px; margin: 0; }
-    
-    .new-goal-section { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .new-goal-section h3 { margin: 0 0 15px 0; color: #1f2937; }
-    .new-goal-form { display: flex; gap: 10px; flex-wrap: wrap; }
-    .new-goal-form input { flex: 1; min-width: 150px; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
-    .new-goal-form button { padding: 12px 24px; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 10px; padding: 30px; width: 100%; max-width: 420px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .modal h3 { margin: 0 0 20px 0; color: #1f2937; font-size: 18px; }
+    .modal .modal-form { display: flex; flex-direction: column; gap: 12px; }
+    .modal .modal-form input { padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+    .modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .modal .modal-actions .btn-cancel { background-color: #6b7280; }
+    .modal .modal-actions .btn-cancel:hover { background-color: #4b5563; }
 
   </style>
 </head>
@@ -106,14 +111,7 @@
         <div class="investment-goals-section">
           <h3>Objetivos de Ahorro e Inversión</h3>
           
-          <div class="new-goal-section">
-            <h3>Crear Nuevo Objetivo</h3>
-            <div class="new-goal-form">
-              <input type="text" id="new-goal-name" placeholder="Nombre del objetivo (ej: Vacaciones)" style="flex: 1; min-width: 200px;">
-              <input type="number" id="new-goal-amount" placeholder="Cantidad objetivo (€)" step="0.01" min="0" style="flex: 1; min-width: 150px;">
-              <button onclick="createInvestmentGoal()">Crear Objetivo</button>
-            </div>
-          </div>
+          <button onclick="openNewGoalModal()" aria-label="Crear nuevo objetivo de ahorro">Nuevo</button>
           
           <div class="investment-goals-grid" id="investment-goals-container"></div>
         </div>
@@ -149,6 +147,21 @@
       <button class="tab-button" data-tab="octubre">Octubre</button>
       <button class="tab-button" data-tab="noviembre">Noviembre</button>
       <button class="tab-button" data-tab="diciembre">Diciembre</button>
+    </div>
+  </div>
+
+  <!-- New Goal Modal -->
+  <div class="modal-overlay" id="new-goal-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title">Nuevo Objetivo</h3>
+      <div class="modal-form">
+        <input type="text" id="new-goal-name" placeholder="Nombre del objetivo (ej: Vacaciones)">
+        <input type="number" id="new-goal-amount" placeholder="Cantidad objetivo (€)" step="0.01" min="0">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeNewGoalModal()">Cancelar</button>
+        <button onclick="createInvestmentGoal()">Crear</button>
+      </div>
     </div>
   </div>
 
