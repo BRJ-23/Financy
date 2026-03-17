@@ -18,7 +18,7 @@ let savingsChart = null;
 let validationMessageTimeout = null;
 
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', () => {
@@ -164,14 +164,14 @@ function renderIncomeModeSelectors() {
 function initializeTabs() {
   const tabButtons = document.querySelectorAll('.tab-button');
   const tabContents = document.querySelectorAll('.tab-content');
-  
+
   tabButtons.forEach(button => {
     button.addEventListener('click', () => {
       const tabName = button.getAttribute('data-tab');
-      
+
       tabButtons.forEach(btn => btn.classList.remove('active'));
       tabContents.forEach(content => content.classList.remove('active'));
-      
+
       button.classList.add('active');
       document.getElementById(tabName).classList.add('active');
     });
@@ -179,9 +179,9 @@ function initializeTabs() {
 }
 
 function initializeMonthlyTabs() {
-  const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
-                  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-  
+  const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
   months.forEach(month => {
     const tabContent = document.getElementById(month);
     tabContent.innerHTML = `
@@ -274,71 +274,71 @@ function initializeMonthlyTabs() {
 function addIncome(month) {
   const amountInput = document.getElementById(`${month}-income-amount`);
   const descriptionInput = document.getElementById(`${month}-income-description`);
-  
+
   const amount = parseFloat(amountInput.value) || 0;
   const description = descriptionInput.value.trim();
-  
+
   if (amount <= 0) {
     showValidationMessage('Por favor, ingrese una cantidad válida');
     return;
   }
-  
+
   if (!description) {
     showValidationMessage('Por favor, ingrese una descripción');
     return;
   }
-  
+
   const budget = monthlyBudgets[month];
   budget.incomes.push({ amount, description });
   budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
-  
+
   updateIncomeDisplay(month);
   updateBudgetAllocations(month);
-  
+
   amountInput.value = '';
   descriptionInput.value = '';
-  
+
   updateSavingsChart();
 }
 
 function addExpense(month, type) {
   const amountInput = document.getElementById(`${month}-${type}-amount`);
   const descriptionInput = document.getElementById(`${month}-${type}-description`);
-  
+
   const amount = parseFloat(amountInput.value) || 0;
   const description = descriptionInput.value.trim();
-  
+
   if (amount <= 0) {
     showValidationMessage('Por favor, ingrese una cantidad válida');
     return;
   }
-  
+
   if (!description) {
     showValidationMessage('Por favor, ingrese una descripción');
     return;
   }
-  
+
   const budget = monthlyBudgets[month];
   let budgetLimit = 0;
-  
+
   if (type === 'monthly') budgetLimit = budget.monthlyExpenses;
   else if (type === 'personal') budgetLimit = budget.personalExpenses;
   else if (type === 'investment') budgetLimit = budget.investments;
-  
+
   const currentExpenses = budget.expenses.filter(e => e.type === type).reduce((sum, e) => sum + e.amount, 0);
-  
+
   if (currentExpenses + amount > budgetLimit) {
     showValidationMessage(`Este gasto excede el presupuesto disponible. Disponible: €${(budgetLimit - currentExpenses).toFixed(2)}`);
     return;
   }
-  
+
   budget.expenses.push({ type, amount, description });
-  
+
   updateExpenseDisplay(month);
 
   amountInput.value = '';
   descriptionInput.value = '';
- 
+
   updateSavingsChart();
 }
 
@@ -348,7 +348,7 @@ function updateIncomeDisplay(month) {
   document.getElementById(`${month}-income-total`).textContent = `€${budget.totalIncome.toFixed(2)}`;
   const incomeList = document.getElementById(`${month}-income-list`);
   incomeList.innerHTML = '';
-  
+
   budget.incomes.forEach((income, index) => {
     incomeList.innerHTML += `
       <div class="expense-item">
@@ -389,7 +389,7 @@ function updateBudgetAllocations(month) {
   const personalExpenses = income * personalPct;
   const investments = income * investPct;
   const baseSavings = income * savingsPct;
-  
+
   budget.monthlyExpenses = monthlyExpenses;
   budget.personalExpenses = personalExpenses;
   budget.investments = investments;
@@ -399,7 +399,7 @@ function updateBudgetAllocations(month) {
   document.getElementById(`${month}-personal-display`).textContent = `€${personalExpenses.toFixed(2)}`;
   document.getElementById(`${month}-investment-display`).textContent = `€${investments.toFixed(2)}`;
   document.getElementById(`${month}-savings-display`).textContent = `€${baseSavings.toFixed(2)}`;
-  
+
   createCategoryCharts(month);
   updateExpenseDisplay(month);
 }
@@ -412,14 +412,14 @@ function createCategoryCharts(month) {
     `${month}-personal-chart`,
     `${month}-investment-chart`
   ];
-  
+
   chartIds.forEach(chartId => {
     const canvasElement = document.getElementById(chartId);
     if (canvasElement && canvasElement.chart) {
       canvasElement.chart.destroy();
     }
   });
-  
+
   const monthlyCtx = document.getElementById(`${month}-monthly-chart`).getContext('2d');
   document.getElementById(`${month}-monthly-chart`).chart = new Chart(monthlyCtx, {
     type: 'doughnut',
@@ -440,7 +440,7 @@ function createCategoryCharts(month) {
       }
     }
   });
-  
+
   const personalCtx = document.getElementById(`${month}-personal-chart`).getContext('2d');
   document.getElementById(`${month}-personal-chart`).chart = new Chart(personalCtx, {
     type: 'doughnut',
@@ -461,7 +461,7 @@ function createCategoryCharts(month) {
       }
     }
   });
-  
+
   const investmentCtx = document.getElementById(`${month}-investment-chart`).getContext('2d');
   document.getElementById(`${month}-investment-chart`).chart = new Chart(investmentCtx, {
     type: 'doughnut',
@@ -481,57 +481,57 @@ function createCategoryCharts(month) {
         legend: { display: false }
       }
     }
-  }); 
+  });
 }
 
 function updateExpenseDisplay(month) {
   const budget = monthlyBudgets[month];
-  
+
   const monthlyUsed = budget.expenses.filter(e => e.type === 'monthly').reduce((sum, e) => sum + e.amount, 0);
   const personalUsed = budget.expenses.filter(e => e.type === 'personal').reduce((sum, e) => sum + e.amount, 0);
   const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((sum, e) => sum + e.amount, 0);
-  
+
   const monthlyLeftover = budget.monthlyExpenses - monthlyUsed;
   const personalLeftover = budget.personalExpenses - personalUsed;
   const investmentLeftover = budget.investments - investmentUsed;
-  
+
   const totalSavings = budget.savings + monthlyLeftover + personalLeftover + investmentLeftover;
-  
+
   document.getElementById(`${month}-monthly-info`).textContent = `Usado: €${monthlyUsed.toFixed(2)} / €${budget.monthlyExpenses.toFixed(2)}`;
   document.getElementById(`${month}-personal-info`).textContent = `Usado: €${personalUsed.toFixed(2)} / €${budget.personalExpenses.toFixed(2)}`;
   document.getElementById(`${month}-investment-info`).textContent = `Usado: €${investmentUsed.toFixed(2)} / €${budget.investments.toFixed(2)}`;
   document.getElementById(`${month}-savings-info`).textContent = `Base: €${budget.savings.toFixed(2)} + Sobrantes: €${(monthlyLeftover + personalLeftover + investmentLeftover).toFixed(2)}`;
-  
+
   document.getElementById(`${month}-savings-display`).textContent = `€${totalSavings.toFixed(2)}`;
-  
+
   const monthlyChart = document.getElementById(`${month}-monthly-chart`).chart;
   const personalChart = document.getElementById(`${month}-personal-chart`).chart;
   const investmentChart = document.getElementById(`${month}-investment-chart`).chart;
-  
+
   if (monthlyChart) {
     monthlyChart.data.datasets[0].data = [monthlyLeftover, monthlyUsed];
     monthlyChart.update();
     const monthlyCenterText = document.getElementById(`${month}-monthly-center-text`);
     if (monthlyCenterText) monthlyCenterText.textContent = `€${monthlyLeftover.toFixed(2)}`;
   }
-  
+
   if (personalChart) {
     personalChart.data.datasets[0].data = [personalLeftover, personalUsed];
     personalChart.update();
     const personalCenterText = document.getElementById(`${month}-personal-center-text`);
     if (personalCenterText) personalCenterText.textContent = `€${personalLeftover.toFixed(2)}`;
   }
-  
+
   if (investmentChart) {
     investmentChart.data.datasets[0].data = [investmentLeftover, investmentUsed];
     investmentChart.update();
     const investmentCenterText = document.getElementById(`${month}-investment-center-text`);
     if (investmentCenterText) investmentCenterText.textContent = `€${investmentLeftover.toFixed(2)}`;
   }
-  
+
   const monthlyExpensesList = document.getElementById(`${month}-monthly-list`);
   monthlyExpensesList.innerHTML = '';
-  
+
   const monthlyExpenses = budget.expenses.map((e, i) => ({ ...e, globalIndex: i })).filter(e => e.type === 'monthly');
   monthlyExpenses.forEach((expense) => {
     monthlyExpensesList.innerHTML += `
@@ -544,10 +544,10 @@ function updateExpenseDisplay(month) {
       </div>
     `;
   });
-  
+
   const personalExpensesList = document.getElementById(`${month}-personal-list`);
   personalExpensesList.innerHTML = '';
-  
+
   const personalExpenses = budget.expenses.map((e, i) => ({ ...e, globalIndex: i })).filter(e => e.type === 'personal');
   personalExpenses.forEach((expense) => {
     personalExpensesList.innerHTML += `
@@ -560,10 +560,10 @@ function updateExpenseDisplay(month) {
       </div>
     `;
   });
-  
+
   const investmentExpensesList = document.getElementById(`${month}-investment-list`);
   investmentExpensesList.innerHTML = '';
-  
+
   const investmentExpenses = budget.expenses.map((e, i) => ({ ...e, globalIndex: i })).filter(e => e.type === 'investment');
   investmentExpenses.forEach((expense) => {
     investmentExpensesList.innerHTML += `
@@ -596,12 +596,12 @@ function deleteExpense(month, index) {
 
 function initializeSavingsChart() {
   const ctx = document.getElementById('savingsChart').getContext('2d');
-  
+
   savingsChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-               'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+      labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
       datasets: [{
         label: 'Ahorro Mensual',
         data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -651,7 +651,7 @@ function initializeSavingsChart() {
             size: 12
           },
           callbacks: {
-            label: function(context) {
+            label: function (context) {
               return 'Ahorro: €' + context.parsed.y.toFixed(2);
             }
           }
@@ -681,7 +681,7 @@ function initializeSavingsChart() {
             font: {
               size: 12
             },
-            callback: function(value) {
+            callback: function (value) {
               return '€' + value.toFixed(0);
             }
           }
@@ -689,7 +689,7 @@ function initializeSavingsChart() {
       }
     }
   });
-  
+
   window.addEventListener('resize', handleChartResize);
 }
 
@@ -701,23 +701,23 @@ function handleChartResize() {
 
 function updateSavingsChart() {
   if (!savingsChart) return;
-  
+
   const savingsData = MONTHS.map(month => {
     const budget = monthlyBudgets[month];
-    
+
     if (budget.totalIncome === 0) return 0;
-    
+
     const monthlyUsed = budget.expenses.filter(e => e.type === 'monthly').reduce((sum, e) => sum + e.amount, 0);
     const personalUsed = budget.expenses.filter(e => e.type === 'personal').reduce((sum, e) => sum + e.amount, 0);
     const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((sum, e) => sum + e.amount, 0);
-    
+
     const monthlyLeftover = budget.monthlyExpenses - monthlyUsed;
     const personalLeftover = budget.personalExpenses - personalUsed;
     const investmentLeftover = budget.investments - investmentUsed;
-    
+
     return budget.savings + monthlyLeftover + personalLeftover + investmentLeftover;
   });
-  
+
   savingsChart.data.datasets[0].data = savingsData;
   savingsChart.update();
 }
@@ -735,81 +735,173 @@ function closeNewGoalModal() {
 function createInvestmentGoal() {
   const nameInput = document.getElementById('new-goal-name');
   const amountInput = document.getElementById('new-goal-amount');
-  
+
   const name = nameInput.value.trim();
   const targetAmount = parseFloat(amountInput.value) || 0;
-  
+
   if (!name) {
     showValidationMessage('Por favor, ingrese un nombre para el objetivo');
     return;
   }
-  
+
   if (targetAmount <= 0) {
     showValidationMessage('Por favor, ingrese una cantidad válida');
     return;
   }
-  
+
   // Create new investment goal
   const goalId = 'goal-' + Date.now();
   investmentGoals.push({
     id: goalId,
     name: name,
     targetAmount: targetAmount,
-    currentAmount: 0
+    currentAmount: 0,
+    transactions: []
   });
-  
+
   nameInput.value = '';
   amountInput.value = '';
-  
+
   closeNewGoalModal();
   renderInvestmentGoals();
 }
 
 function addFundsToGoal(goalId) {
   const amountInput = document.getElementById(`funds-${goalId}`);
+  const descInput = document.getElementById(`funds-desc-${goalId}`);
   const amount = parseFloat(amountInput.value) || 0;
-  
-  if (amount <= 0) {
-    showValidationMessage('Por favor, ingrese una cantidad válida');
+  const desc = descInput ? descInput.value.trim() : '';
+
+  if (amount === 0) {
+    showValidationMessage('Por favor, ingrese una cantidad distinta de 0');
     return;
   }
-  
+
+  if (!desc) {
+    showValidationMessage('Por favor, ingrese una descripción');
+    return;
+  }
+
   const goal = investmentGoals.find(g => g.id === goalId);
   if (goal) {
+    if (!goal.transactions) goal.transactions = []; // handle old data
+    goal.transactions.push({
+      id: Date.now(),
+      amount: amount,
+      description: desc,
+      date: new Date().toISOString()
+    });
     goal.currentAmount += amount;
     amountInput.value = '';
+    if (descInput) descInput.value = '';
     renderInvestmentGoals();
   }
 }
 
 function deleteInvestmentGoal(goalId) {
-  if (confirm('¿Estás seguro de que deseas eliminar este objetivo?')) {
-    const index = investmentGoals.findIndex(g => g.id === goalId);
-    if (index > -1) {
-      investmentGoals.splice(index, 1);
-      renderInvestmentGoals();
+  const index = investmentGoals.findIndex(g => g.id === goalId);
+  if (index > -1) {
+    investmentGoals.splice(index, 1);
+    renderInvestmentGoals();
+  }
+}
+
+function toggleGoalOptions(goalId) {
+  const menu = document.getElementById(`goal-menu-${goalId}`);
+  if (menu) {
+    const isShowing = menu.classList.contains('show');
+    // Close any other open menus
+    document.querySelectorAll('.goal-options-menu.show').forEach(el => el.classList.remove('show'));
+    if (!isShowing) {
+      menu.classList.add('show');
     }
   }
 }
 
+function editInvestmentGoal(goalId) {
+  const goal = investmentGoals.find(g => g.id === goalId);
+  if (!goal) return;
+
+  document.getElementById('edit-goal-id').value = goal.id;
+  document.getElementById('edit-goal-name').value = goal.name;
+  document.getElementById('edit-goal-amount').value = goal.targetAmount;
+  document.getElementById('edit-goal-modal').classList.add('open');
+}
+
+function closeEditGoalModal() {
+  document.getElementById('edit-goal-modal').classList.remove('open');
+}
+
+function saveEditedGoal() {
+  const id = document.getElementById('edit-goal-id').value;
+  const newName = document.getElementById('edit-goal-name').value.trim();
+  const newAmount = parseFloat(document.getElementById('edit-goal-amount').value) || 0;
+
+  if (!newName) {
+    showValidationMessage('Por favor, ingrese un nombre para el fondo');
+    return;
+  }
+
+  if (newAmount <= 0) {
+    showValidationMessage('Por favor, ingrese una cantidad válida');
+    return;
+  }
+
+  const goal = investmentGoals.find(g => g.id === id);
+  if (goal) {
+    goal.name = newName;
+    goal.targetAmount = newAmount;
+    closeEditGoalModal();
+    renderInvestmentGoals();
+  }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.goal-options-wrapper')) {
+    document.querySelectorAll('.goal-options-menu.show').forEach(el => el.classList.remove('show'));
+  }
+});
+
 function renderInvestmentGoals() {
   const container = document.getElementById('investment-goals-container');
-  
+
   if (investmentGoals.length === 0) {
     container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 40px;">No hay objetivos de ahorro. ¡Crea uno arriba!</p>';
     return;
   }
-  
+
   container.innerHTML = investmentGoals.map(goal => {
-    const percentage = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+    const percentage = Math.max(0, Math.min((goal.currentAmount / goal.targetAmount) * 100, 100));
     const remaining = goal.targetAmount - goal.currentAmount;
     const isComplete = goal.currentAmount >= goal.targetAmount;
-    
+
+    let transationsHtml = '';
+    if (goal.transactions && goal.transactions.length > 0) {
+      // Show most recent first
+      const sortedT = [...goal.transactions].reverse();
+      transationsHtml = sortedT.map(t => {
+        const isPos = t.amount >= 0;
+        return `
+          <div class="goal-transaction-item">
+            <div class="desc" title="${t.description}">${t.description}</div>
+            <div class="amt ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
     return `
       <div class="investment-goal-card">
         <h4>
           <span class="goal-name">${goal.name}</span>
-          <button class="delete-btn" onclick="deleteInvestmentGoal('${goal.id}')">Eliminar</button>
+          <div class="goal-options-wrapper">
+            <button class="goal-options-btn" onclick="toggleGoalOptions('${goal.id}')">☰</button>
+            <div id="goal-menu-${goal.id}" class="goal-options-menu">
+              <button onclick="editInvestmentGoal('${goal.id}')">Editar</button>
+              <button class="delete" onclick="deleteInvestmentGoal('${goal.id}')">Borrar</button>
+            </div>
+          </div>
         </h4>
         
         <div class="goal-progress">
@@ -823,13 +915,16 @@ function renderInvestmentGoals() {
         </div>
         
         <div class="goal-amount" ${isComplete ? 'style="color: #10b981; font-weight: bold;"' : ''}>
-          ${isComplete ? '✓ ¡Objetivo alcanzado!' : `Falta: €${remaining.toFixed(2)}`}
+          ${isComplete ? '✓ ¡Objetivo alcanzado!' : (remaining > 0 ? `Falta: €${remaining.toFixed(2)}` : '')}
         </div>
         
         <div class="goal-add-funds">
-          <input type="number" id="funds-${goal.id}" placeholder="Cantidad (€)" step="0.01" min="0">
-          <button onclick="addFundsToGoal('${goal.id}')">Añadir</button>
+          <input type="text" id="funds-desc-${goal.id}" placeholder="Descripción" style="flex: 2;">
+          <input type="number" id="funds-${goal.id}" placeholder="€" step="0.01" style="flex: 1;">
+          <button onclick="addFundsToGoal('${goal.id}')" title="Añadir Movimiento">+</button>
         </div>
+        
+        ${transationsHtml ? `<div class="goal-transactions">${transationsHtml}</div>` : ''}
       </div>
     `;
   }).join('');
@@ -925,7 +1020,7 @@ function initializeModesUI() {
     inPersonal.value = mode.allocations?.personal ?? 0;
     inInvestment.value = mode.allocations?.investment ?? 0;
     inSavings.value = mode.allocations?.savings ?? 0;
-     defaultCheckbox.checked = !!mode.isDefault;
+    defaultCheckbox.checked = !!mode.isDefault;
     updateSum();
   }
 
@@ -1059,3 +1154,7 @@ window.closeNewGoalModal = closeNewGoalModal;
 window.createInvestmentGoal = createInvestmentGoal;
 window.addFundsToGoal = addFundsToGoal;
 window.deleteInvestmentGoal = deleteInvestmentGoal;
+window.toggleGoalOptions = toggleGoalOptions;
+window.editInvestmentGoal = editInvestmentGoal;
+window.closeEditGoalModal = closeEditGoalModal;
+window.saveEditedGoal = saveEditedGoal;
