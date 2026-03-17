@@ -1,6 +1,6 @@
 # Administracion
 
-Aplicación de escritorio para gestionar movimientos financieros personales, construida con **Electron** y **better-sqlite3**, siguiendo el enfoque **TDD** (Test-Driven Development).
+Aplicación de escritorio para gestionar movimientos financieros personales, construida con **Electron** y **better-sqlite3**.
 
 ---
 
