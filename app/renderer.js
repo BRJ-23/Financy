@@ -15,13 +15,49 @@ const monthlyBudgets = {
 
 const investmentGoals = [];
 let savingsChart = null;
+let validationMessageTimeout = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  let validationBar = document.getElementById('validation-bar');
+  if (!validationBar) {
+    validationBar = document.createElement('div');
+    validationBar.id = 'validation-bar';
+    validationBar.style.position = 'fixed';
+    validationBar.style.bottom = '16px';
+    validationBar.style.left = '50%';
+    validationBar.style.transform = 'translateX(-50%)';
+    validationBar.style.backgroundColor = '#b91c1c';
+    validationBar.style.color = '#fff';
+    validationBar.style.padding = '10px 16px';
+    validationBar.style.borderRadius = '6px';
+    validationBar.style.fontSize = '13px';
+    validationBar.style.boxShadow = '0 2px 6px rgba(0,0,0,0.25)';
+    validationBar.style.zIndex = '2000';
+    validationBar.style.display = 'none';
+    document.body.appendChild(validationBar);
+  }
+
   initializeTabs();
   initializeMonthlyTabs();
   initializeSavingsChart();
   renderInvestmentGoals();
 });
+
+function showValidationMessage(message) {
+  const bar = document.getElementById('validation-bar');
+  if (!bar) return;
+
+  bar.textContent = message;
+  bar.style.display = 'block';
+
+  if (validationMessageTimeout) {
+    clearTimeout(validationMessageTimeout);
+  }
+
+  validationMessageTimeout = setTimeout(() => {
+    bar.style.display = 'none';
+  }, 3000);
+}
 
 function initializeTabs() {
   const tabButtons = document.querySelectorAll('.tab-button');
@@ -138,12 +174,12 @@ function addIncome(month) {
   const description = descriptionInput.value.trim();
   
   if (amount <= 0) {
-    alert('Por favor, ingrese una cantidad válida');
+    showValidationMessage('Por favor, ingrese una cantidad válida');
     return;
   }
   
   if (!description) {
-    alert('Por favor, ingrese una descripción');
+    showValidationMessage('Por favor, ingrese una descripción');
     return;
   }
   
@@ -168,12 +204,12 @@ function addExpense(month, type) {
   const description = descriptionInput.value.trim();
   
   if (amount <= 0) {
-    alert('Por favor, ingrese una cantidad válida');
+    showValidationMessage('Por favor, ingrese una cantidad válida');
     return;
   }
   
   if (!description) {
-    alert('Por favor, ingrese una descripción');
+    showValidationMessage('Por favor, ingrese una descripción');
     return;
   }
   
@@ -187,7 +223,7 @@ function addExpense(month, type) {
   const currentExpenses = budget.expenses.filter(e => e.type === type).reduce((sum, e) => sum + e.amount, 0);
   
   if (currentExpenses + amount > budgetLimit) {
-    alert(`Este gasto excede el presupuesto disponible. Disponible: €${(budgetLimit - currentExpenses).toFixed(2)}`);
+    showValidationMessage(`Este gasto excede el presupuesto disponible. Disponible: €${(budgetLimit - currentExpenses).toFixed(2)}`);
     return;
   }
   
@@ -582,15 +618,16 @@ function createInvestmentGoal() {
   const targetAmount = parseFloat(amountInput.value) || 0;
   
   if (!name) {
-    alert('Por favor, ingrese un nombre para el objetivo');
+    showValidationMessage('Por favor, ingrese un nombre para el objetivo');
     return;
   }
   
   if (targetAmount <= 0) {
-    alert('Por favor, ingrese una cantidad válida');
+    showValidationMessage('Por favor, ingrese una cantidad válida');
     return;
   }
   
+  // Create new investment goal
   const goalId = 'goal-' + Date.now();
   investmentGoals.push({
     id: goalId,
@@ -611,7 +648,7 @@ function addFundsToGoal(goalId) {
   const amount = parseFloat(amountInput.value) || 0;
   
   if (amount <= 0) {
-    alert('Por favor, ingrese una cantidad válida');
+    showValidationMessage('Por favor, ingrese una cantidad válida');
     return;
   }
   
