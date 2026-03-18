@@ -14,6 +14,7 @@ const monthlyBudgets = {
 };
 
 const investmentGoals = [];
+const globalSavingsWithdrawals = [];
 let savingsChart = null;
 let validationMessageTimeout = null;
 
@@ -823,6 +824,40 @@ function updateSavingsChart() {
 
   savingsChart.data.datasets[0].data = savingsData;
   savingsChart.update();
+  
+  if (typeof updateGlobalSavings === 'function') {
+    updateGlobalSavings();
+  }
+}
+
+function updateGlobalSavings() {
+  let totalSavings = 0;
+  
+  MONTHS.forEach(month => {
+    const budget = monthlyBudgets[month];
+    
+    // Only count savings if there is income
+    if (budget.totalIncome === 0) return;
+    
+    const monthlyUsed = budget.expenses.filter(e => e.type === 'monthly').reduce((sum, e) => sum + e.amount, 0);
+    const personalUsed = budget.expenses.filter(e => e.type === 'personal').reduce((sum, e) => sum + e.amount, 0);
+    const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((sum, e) => sum + e.amount, 0);
+
+    const monthlyLeftover = budget.monthlyExpenses - monthlyUsed;
+    const personalLeftover = budget.personalExpenses - personalUsed;
+    const investmentLeftover = budget.investments - investmentUsed;
+
+    const monthSavings = budget.savings + monthlyLeftover + personalLeftover + investmentLeftover;
+    totalSavings += monthSavings;
+  });
+
+  const totalDeductions = globalSavingsWithdrawals.reduce((sum, w) => sum + w.amount, 0);
+  totalSavings -= totalDeductions;
+
+  const display = document.getElementById('global-savings-display');
+  if (display) {
+    display.textContent = `€${totalSavings.toFixed(2)}`;
+  }
 }
 
 function openNewGoalModal() {
@@ -1060,7 +1095,8 @@ function initializeSettingsUI() {
   const navButtons = document.querySelectorAll('.settings-nav-button');
   const sections = {
     general: document.getElementById('settings-section-general'),
-    'modos-ahorro': document.getElementById('settings-section-modos-ahorro')
+    'modos-ahorro': document.getElementById('settings-section-modos-ahorro'),
+    'modos-especiales': document.getElementById('settings-section-modos-especiales')
   };
   const title = document.getElementById('settings-title');
 
@@ -1093,9 +1129,16 @@ function initializeSettingsUI() {
       });
 
       if (sectionKey === 'general') title.textContent = 'General';
-      else if (sectionKey === 'modos-ahorro') title.textContent = 'Modos ahorro';
+      else if (sectionKey === 'modos-ahorro') title.textContent = 'Modos de Ahorro';
+      else if (sectionKey === 'modos-especiales') title.textContent = 'Modos Especiales';
     });
   });
+
+  const btnBeca = document.getElementById('beca-register');
+  if (btnBeca) btnBeca.addEventListener('click', registerBeca);
+
+  const btnSavings = document.getElementById('savings-withdrawal-register');
+  if (btnSavings) btnSavings.addEventListener('click', registerSavingsWithdrawal);
 
   initializeModesUI();
 }
@@ -1295,4 +1338,92 @@ function deleteTransaction(goalId, transactionId) {
       }
     }
   }
+}
+
+function registerBeca() {
+  const nameInput = document.getElementById('special-mode-beca-name');
+  const amountInput = document.getElementById('beca-amount');
+  const startMonthInput = document.getElementById('beca-start-month');
+  const durationInput = document.getElementById('beca-months');
+
+  const name = nameInput.value.trim() || 'Modo Beca';
+  const amount = parseFloat(amountInput.value) || 0;
+  const startMonth = startMonthInput.value;
+  const duration = parseInt(durationInput.value) || 0;
+
+  if (amount <= 0 || duration <= 0) {
+    showValidationMessage('Introduce una cantidad y duración válidas.');
+    return;
+  }
+
+  const startIndex = MONTHS.indexOf(startMonth);
+  if (startIndex === -1) return;
+
+  const monthlyAmount = amount / duration;
+  let monthsUpdated = 0;
+
+  for (let i = 0; i < duration; i++) {
+    const targetIndex = startIndex + i;
+    if (targetIndex >= MONTHS.length) break; // Don't overflow the year
+    
+    const targetMonth = MONTHS[targetIndex];
+    const budget = monthlyBudgets[targetMonth];
+    
+    budget.incomes.push({
+      amount: monthlyAmount,
+      description: `${name} (${i + 1}/${duration})`,
+      dest: 'reparto',
+      destLabel: 'Reparto'
+    });
+    
+    budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
+    updateIncomeDisplay(targetMonth);
+    updateBudgetAllocations(targetMonth);
+    monthsUpdated++;
+  }
+
+  amountInput.value = '';
+  durationInput.value = '';
+  updateSavingsChart();
+  showValidationMessage(`Ingreso repartido entre ${monthsUpdated} meses exitosamente.`);
+}
+
+function registerSavingsWithdrawal() {
+  const nameInput = document.getElementById('special-mode-savings-name');
+  const amountInput = document.getElementById('savings-withdrawal-amount');
+  const destMonthInput = document.getElementById('savings-withdrawal-month');
+
+  const name = nameInput.value.trim() || 'Modo Vivir de ahorros';
+  const amount = parseFloat(amountInput.value) || 0;
+  const destMonth = destMonthInput.value;
+
+  if (amount <= 0 || !destMonth) {
+    showValidationMessage('Introduce una cantidad válida y un mes.');
+    return;
+  }
+
+  const budget = monthlyBudgets[destMonth];
+  
+  // Track withdrawal internally instead of negative income
+  globalSavingsWithdrawals.push({
+    amount: Math.abs(amount),
+    month: destMonth,
+    date: new Date().toISOString()
+  });
+
+  // Create positive income corresponding to what is being injected into the month
+  budget.incomes.push({
+    amount: Math.abs(amount),
+    description: `${name} (Inyección)`,
+    dest: 'monthly',
+    destLabel: 'Mensuales'
+  });
+
+  budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
+  updateIncomeDisplay(destMonth);
+  updateBudgetAllocations(destMonth);
+  updateSavingsChart();
+
+  amountInput.value = '';
+  showValidationMessage(`Ahorro inyectado exitosamente en ${destMonth.charAt(0).toUpperCase() + destMonth.slice(1)}.`);
 }
