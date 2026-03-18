@@ -252,7 +252,9 @@ function initializeMonthlyTabs() {
             <small id="${month}-investment-info" style="color: #6b7280;">Usado: €0 / €0</small>
             <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
               <div class="input-group" style="flex-direction: column; gap: 8px;">
-                <input type="text" id="${month}-investment-description" placeholder="Descripción" style="min-width: auto;">
+                <select id="${month}-investment-description" style="min-width: auto; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                  <option value="">Selecciona un fondo...</option>
+                </select>
                 <input type="number" id="${month}-investment-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
                 <button onclick="addExpense('${month}', 'investment')" style="margin: 0;">Añadir Gasto</button>
               </div>
@@ -306,15 +308,24 @@ function addExpense(month, type) {
   const descriptionInput = document.getElementById(`${month}-${type}-description`);
 
   const amount = parseFloat(amountInput.value) || 0;
-  const description = descriptionInput.value.trim();
+  
+  let description = '';
+  let goalId = null;
+
+  if (type === 'investment' && descriptionInput.tagName === 'SELECT') {
+    goalId = descriptionInput.value;
+    description = goalId ? descriptionInput.options[descriptionInput.selectedIndex].text : '';
+  } else {
+    description = descriptionInput.value.trim();
+  }
 
   if (amount <= 0) {
     showValidationMessage('Por favor, ingrese una cantidad válida');
     return;
   }
 
-  if (!description) {
-    showValidationMessage('Por favor, ingrese una descripción');
+  if (!description || (type === 'investment' && !goalId)) {
+    showValidationMessage(type === 'investment' ? 'Por favor, selecciona un fondo' : 'Por favor, ingrese una descripción');
     return;
   }
 
@@ -332,12 +343,42 @@ function addExpense(month, type) {
     return;
   }
 
-  budget.expenses.push({ type, amount, description });
+  const expenseObj = { 
+    type, 
+    amount, 
+    description,
+    id: Date.now() // Unique ID for tracking
+  };
+  if (type === 'investment') {
+    expenseObj.goalId = goalId;
+  }
+
+  budget.expenses.push(expenseObj);
+
+  if (type === 'investment' && goalId) {
+    const goal = investmentGoals.find(g => g.id === goalId);
+    if (goal) {
+      if (!goal.transactions) goal.transactions = [];
+      goal.transactions.push({
+        id: expenseObj.id, // linked ID
+        amount: amount,
+        description: `Aportación desde ${month}`,
+        date: new Date().toISOString(),
+        isLinkedExpense: true // To identify it
+      });
+      goal.currentAmount += amount;
+      renderInvestmentGoals();
+    }
+  }
 
   updateExpenseDisplay(month);
 
   amountInput.value = '';
-  descriptionInput.value = '';
+  if (type !== 'investment') {
+    descriptionInput.value = '';
+  } else {
+    descriptionInput.value = ''; // resets select to empty
+  }
 
   updateSavingsChart();
 }
@@ -589,6 +630,23 @@ function deleteIncome(month, index) {
 
 function deleteExpense(month, index) {
   const budget = monthlyBudgets[month];
+  const expense = budget.expenses[index];
+
+  // If it's linked to an investment goal, remove the transaction and subtract the amount
+  if (expense.type === 'investment' && expense.goalId) {
+    const goal = investmentGoals.find(g => g.id === expense.goalId);
+    if (goal) {
+      if (goal.transactions) {
+        const tIndex = goal.transactions.findIndex(t => t.id === expense.id && t.isLinkedExpense);
+        if (tIndex > -1) {
+          goal.transactions.splice(tIndex, 1);
+        }
+      }
+      goal.currentAmount -= expense.amount;
+      renderInvestmentGoals();
+    }
+  }
+
   budget.expenses.splice(index, 1);
   updateExpenseDisplay(month);
   updateSavingsChart();
@@ -868,6 +926,7 @@ function renderInvestmentGoals() {
 
   if (investmentGoals.length === 0) {
     container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 40px;">No hay objetivos de ahorro. ¡Crea uno arriba!</p>';
+    updateInvestmentSelects();
     return;
   }
 
@@ -928,6 +987,23 @@ function renderInvestmentGoals() {
       </div>
     `;
   }).join('');
+  
+  updateInvestmentSelects();
+}
+
+function updateInvestmentSelects() {
+  MONTHS.forEach(month => {
+    const select = document.getElementById(`${month}-investment-description`);
+    if (select && select.tagName === 'SELECT') {
+      const currentVal = select.value;
+      select.innerHTML = '<option value="">Selecciona un fondo...</option>' + 
+        investmentGoals.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+      // Restore previous value if it still exists
+      if (investmentGoals.some(g => g.id === currentVal)) {
+        select.value = currentVal;
+      }
+    }
+  });
 }
 
 function initializeSettingsUI() {
