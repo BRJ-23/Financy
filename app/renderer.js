@@ -941,10 +941,12 @@ function renderInvestmentGoals() {
       const sortedT = [...goal.transactions].reverse();
       transationsHtml = sortedT.map(t => {
         const isPos = t.amount >= 0;
+        const canDelete = !t.isLinkedExpense;
         return `
           <div class="goal-transaction-item">
             <div class="desc" title="${t.description}">${t.description}</div>
             <div class="amt ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}</div>
+            ${canDelete ? `<button class="delete-item-btn" onclick="deleteTransaction('${goal.id}', ${t.id})" title="Eliminar movimiento">✕</button>` : ''}
           </div>
         `;
       }).join('');
@@ -1145,21 +1147,21 @@ function initializeModesUI() {
           selectedId = modes[0]?.id || '';
           if (selectedId) {
             const m = getModeById(selectedId);
-            if (m) loadMode(m);
-          } else {
-            nameInput.value = '';
-            inMonthly.value = 0;
-            inPersonal.value = 0;
-            inInvestment.value = 0;
-            inSavings.value = 0;
-            updateSum();
-          }
-        }
-        renderList();
-        renderIncomeModeSelectors();
-      });
-    });
-  }
+        if (m) loadMode(m);
+      } else {
+        nameInput.value = '';
+        inMonthly.value = 0;
+        inPersonal.value = 0;
+        inInvestment.value = 0;
+        inSavings.value = 0;
+        updateSum();
+      }
+    }
+    renderList();
+    renderIncomeModeSelectors();
+  });
+});
+}
 
   function createNew() {
     const id = 'mode-' + Date.now();
@@ -1234,3 +1236,18 @@ window.toggleGoalOptions = toggleGoalOptions;
 window.editInvestmentGoal = editInvestmentGoal;
 window.closeEditGoalModal = closeEditGoalModal;
 window.saveEditedGoal = saveEditedGoal;
+window.deleteTransaction = deleteTransaction;
+
+function deleteTransaction(goalId, transactionId) {
+  const goal = investmentGoals.find(g => g.id === goalId);
+  if (goal) {
+    if (goal.transactions) {
+      const tIndex = goal.transactions.findIndex(t => t.id === transactionId);
+      if (tIndex > -1) {
+        goal.currentAmount -= goal.transactions[tIndex].amount;
+        goal.transactions.splice(tIndex, 1);
+        renderInvestmentGoals();
+      }
+    }
+  }
+}
