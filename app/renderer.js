@@ -17,6 +17,22 @@ const investmentGoals = [];
 const globalSavingsWithdrawals = [];
 let savingsChart = null;
 let validationMessageTimeout = null;
+let customFunds = [];
+
+function getCustomFunds() {
+  try {
+    const raw = localStorage.getItem('customFunds');
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+  } catch (e) {}
+  return [
+    { id: 'fund-default', name: 'Cuenta Principal', amount: 0, isDefault: true }
+  ];
+}
+
+function saveCustomFunds(funds) {
+  localStorage.setItem('customFunds', JSON.stringify(funds));
+}
 
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -48,6 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
     autocompleteList.id = 'category-autocomplete-list';
     document.body.appendChild(autocompleteList);
   }
+
+  customFunds = getCustomFunds();
 
   initializeTabs();
   initializeMonthlyTabs();
@@ -949,7 +967,7 @@ function updateSavingsChart() {
 }
 
 function updateGlobalSavings() {
-  let totalSavings = 0;
+  let totalAppSavings = 0;
   
   MONTHS.forEach(month => {
     const budget = monthlyBudgets[month];
@@ -966,16 +984,144 @@ function updateGlobalSavings() {
     const investmentLeftover = budget.investments - investmentUsed;
 
     const monthSavings = budget.savings + monthlyLeftover + personalLeftover + investmentLeftover;
-    totalSavings += monthSavings;
+    totalAppSavings += monthSavings;
   });
 
   const totalDeductions = globalSavingsWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-  totalSavings -= totalDeductions;
+  totalAppSavings -= totalDeductions;
+
+  let globalTotal = 0;
+  customFunds.forEach(fund => {
+    let fundTotal = fund.amount;
+    if (fund.isDefault) {
+      fundTotal += totalAppSavings;
+    }
+    globalTotal += fundTotal;
+  });
 
   const display = document.getElementById('global-savings-display');
   if (display) {
-    display.textContent = `€${totalSavings.toFixed(2)}`;
+    display.textContent = `€${globalTotal.toFixed(2)}`;
   }
+
+  renderCustomFunds(totalAppSavings);
+}
+
+function renderCustomFunds(appSavings = 0) {
+  const container = document.getElementById('custom-funds-list');
+  if (!container) return;
+
+  container.innerHTML = customFunds.map(fund => {
+    let displayAmount = fund.amount;
+    if (fund.isDefault) {
+      displayAmount += appSavings;
+    }
+
+    return `
+      <div class="custom-fund-card ${fund.isDefault ? 'is-default' : ''}">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
+          <div>
+            <strong style="color: #374151; font-size: 14px;">${fund.name}</strong>
+            ${fund.isDefault ? '<div style="margin-top: 4px;"><span style="font-size: 10px; background: #d1fae5; color: #047857; padding: 2px 6px; border-radius: 4px;">Por Defecto</span></div>' : ''}
+          </div>
+          <div class="goal-options-wrapper" style="margin-top: -4px; margin-right: -4px;">
+            <button class="goal-options-btn" onclick="toggleCfOptions('${fund.id}')">☰</button>
+            <div id="cf-menu-${fund.id}" class="goal-options-menu">
+              <button onclick="editCustomFund('${fund.id}')">Editar</button>
+              <button class="delete" onclick="deleteCustomFund('${fund.id}')">Borrar</button>
+            </div>
+          </div>
+        </div>
+        <div style="font-size: 20px; font-weight: bold; color: ${fund.isDefault ? '#10b981' : '#111827'}; margin-top: 5px;">
+          €${displayAmount.toFixed(2)}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openNewCustomFundModal() {
+  document.getElementById('custom-fund-id').value = '';
+  document.getElementById('custom-fund-name').value = '';
+  document.getElementById('custom-fund-amount').value = '';
+  document.getElementById('custom-fund-default').checked = false;
+  document.getElementById('custom-fund-modal-title').textContent = 'Nuevo Fondo de Ahorro';
+  document.getElementById('custom-fund-modal').classList.add('open');
+}
+
+function editCustomFund(id) {
+  const fund = customFunds.find(f => f.id === id);
+  if (!fund) return;
+  document.getElementById('custom-fund-id').value = fund.id;
+  document.getElementById('custom-fund-name').value = fund.name;
+  document.getElementById('custom-fund-amount').value = fund.amount;
+  document.getElementById('custom-fund-default').checked = fund.isDefault;
+  document.getElementById('custom-fund-modal-title').textContent = 'Editar Fondo';
+  document.getElementById('custom-fund-modal').classList.add('open');
+}
+
+function closeCustomFundModal() {
+  document.getElementById('custom-fund-modal').classList.remove('open');
+}
+
+function toggleCfOptions(fundId) {
+  const menu = document.getElementById(`cf-menu-${fundId}`);
+  if (menu) {
+    const isShowing = menu.classList.contains('show');
+    document.querySelectorAll('.goal-options-menu.show').forEach(el => el.classList.remove('show'));
+    if (!isShowing) {
+      menu.classList.add('show');
+    }
+  }
+}
+
+function saveCustomFund() {
+  const id = document.getElementById('custom-fund-id').value;
+  const name = document.getElementById('custom-fund-name').value.trim();
+  const amount = parseFloat(document.getElementById('custom-fund-amount').value) || 0;
+  const isDefault = document.getElementById('custom-fund-default').checked;
+
+  if (!name) {
+    showValidationMessage('Por favor, ingrese un nombre para el fondo');
+    return;
+  }
+
+  if (isDefault) {
+    customFunds.forEach(f => f.isDefault = false);
+  } else {
+    const otherDefault = customFunds.some(f => f.id !== id && f.isDefault);
+    if (!otherDefault) {
+      showValidationMessage('Debe haber al menos un fondo por defecto que reciba el ahorro de la app.');
+      return;
+    }
+  }
+
+  if (id) {
+    const fund = customFunds.find(f => f.id === id);
+    if (fund) {
+      fund.name = name;
+      fund.amount = amount;
+      fund.isDefault = isDefault;
+    }
+  } else {
+    customFunds.push({ id: 'cf-' + Date.now(), name, amount, isDefault });
+  }
+
+  saveCustomFunds(customFunds);
+  closeCustomFundModal();
+  updateSavingsChart();
+}
+
+function deleteCustomFund(id) {
+  const fund = customFunds.find(f => f.id === id);
+  if (fund && fund.isDefault) {
+    showValidationMessage('No puedes borrar el fondo por defecto. Marca otro como defecto primero.');
+    return;
+  }
+  
+  customFunds = customFunds.filter(f => f.id !== id);
+  saveCustomFunds(customFunds);
+  updateSavingsChart();
 }
 
 function openNewGoalModal() {
@@ -1443,6 +1589,12 @@ window.editInvestmentGoal = editInvestmentGoal;
 window.closeEditGoalModal = closeEditGoalModal;
 window.saveEditedGoal = saveEditedGoal;
 window.deleteTransaction = deleteTransaction;
+window.openNewCustomFundModal = openNewCustomFundModal;
+window.closeCustomFundModal = closeCustomFundModal;
+window.saveCustomFund = saveCustomFund;
+window.editCustomFund = editCustomFund;
+window.deleteCustomFund = deleteCustomFund;
+window.toggleCfOptions = toggleCfOptions;
 
 function deleteTransaction(goalId, transactionId) {
   const goal = investmentGoals.find(g => g.id === goalId);

@@ -876,6 +876,22 @@
       border-color: #fecaca;
       color: #991b1b;
     }
+
+    /* Custom Fund Styles */
+    .custom-fund-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid #3b82f6;
+      display: flex;
+      flex-direction: column;
+      min-width: 160px;
+      position: relative;
+    }
+    .custom-fund-card.is-default {
+      border-left-color: #10b981;
+    }
   </style>
 </head>
 
@@ -895,11 +911,18 @@
           <canvas id="savingsChart"></canvas>
         </div>
 
-        <div
-          style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-left: 4px solid #10b981; display: flex; justify-content: space-between; align-items: center;">
-          <h3 style="margin: 0; color: #1f2937;">Ahorros Totales Acumulados</h3>
-          <div class="amount" id="global-savings-display" style="font-size: 24px; font-weight: bold; color: #10b981;">
-            €0.00</div>
+        <div style="display: flex; align-items: stretch; gap: 15px; margin-bottom: 30px; overflow-x: auto; padding-bottom: 5px;" id="custom-funds-wrapper">
+          <div id="custom-funds-list" style="display: flex; gap: 15px;">
+            <!-- Render custom funds here -->
+          </div>
+          <button onclick="openNewCustomFundModal()" aria-label="Añadir fondo" style="display: flex; align-items: center; justify-content: center; width: 60px; min-height: 80px; border-radius: 8px; border: 2px dashed #d1d5db; background: transparent; cursor: pointer; font-size: 24px; color: #6b7280; flex-shrink: 0; padding: 0; transition: all 0.2s;" onmouseover="this.style.background='#f9fafb'; this.style.borderColor='#9ca3af'" onmouseout="this.style.background='transparent'; this.style.borderColor='#d1d5db'">+</button>
+          
+          <div style="background: white; border-radius: 8px; padding: 15px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #10b981; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; margin-left: auto; min-width: 250px; flex-shrink: 0;">
+            <h3 style="margin: 0 0 5px 0; color: #1f2937; font-size: 16px;">Ahorros Totales Acumulados</h3>
+            <div class="amount" id="global-savings-display" style="font-size: 24px; font-weight: bold; color: #10b981;">
+              €0.00
+            </div>
+          </div>
         </div>
 
         <div class="investment-goals-section">
@@ -1138,6 +1161,26 @@
       <div class="modal-actions">
         <button onclick="saveEditedGoal()">Guardar</button>
         <button class="btn-cancel" onclick="closeEditGoalModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Fund Modal -->
+  <div class="modal-overlay" id="custom-fund-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="custom-fund-modal-title">
+      <h3 id="custom-fund-modal-title">Nuevo Fondo de Ahorro</h3>
+      <div class="modal-form">
+        <input type="text" id="custom-fund-name" placeholder="Nombre (ej: Efectivo, Banco)">
+        <input type="number" id="custom-fund-amount" placeholder="Efectivo inicial / Saldo (€)" step="0.01" min="0">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; margin-top: 5px; color: #374151;">
+          <input type="checkbox" id="custom-fund-default" style="width: auto;">
+          Fondo por defecto (recibe ahorros dinámicos)
+        </label>
+        <input type="hidden" id="custom-fund-id">
+      </div>
+      <div class="modal-actions">
+        <button onclick="saveCustomFund()">Guardar</button>
+        <button class="btn-cancel" onclick="closeCustomFundModal()">Cancelar</button>
       </div>
     </div>
   </div>
