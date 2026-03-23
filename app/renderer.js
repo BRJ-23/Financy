@@ -425,6 +425,7 @@ function renderIncomeModeSelectors() {
     }
 
     updateBudgetAllocations(month);
+    updateIncomeDisplay(month);
   });
   updateSavingsChart();
 }
