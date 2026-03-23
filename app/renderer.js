@@ -1,5 +1,6 @@
 let currentYear = new Date().getFullYear();
 let availableYears = [];
+let APP_SETTINGS = {};
 
 function getEmptyBudgets() {
   return {
@@ -44,7 +45,7 @@ const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 // Initialize application
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   let validationBar = document.getElementById('validation-bar');
   if (!validationBar) {
     validationBar = document.createElement('div');
@@ -71,68 +72,75 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(autocompleteList);
   }
 
-  loadAvailableYears();
-  loadYearData(currentYear);
 
-  customFunds = getCustomFunds();
+
+  await loadAvailableYears();
+  await loadYearData(currentYear);
+
+  customFunds = await window.api.getCustomFunds();
+  if (!customFunds || customFunds.length === 0) {
+    const defaultFund = { id: 'fund-default', name: 'Cuenta Principal', amount: 0, isDefault: true };
+    await window.api.addCustomFund(defaultFund);
+    customFunds = [defaultFund];
+  }
 
   renderYearSidebar();
   initializeTabs();
   initializeMonthlyTabs();
   initializeSavingsChart();
   renderInvestmentGoals();
-  ensureDefaultSavingsModes();
+  await ensureDefaultSavingsModes();
   initializeSettingsUI();
-  renderIncomeModeSelectors();
+  await renderIncomeModeSelectors();
   updateCategoryAutocomplete();
 });
 
-function loadAvailableYears() {
-  try {
-    const raw = localStorage.getItem('availableYears');
-    availableYears = raw ? JSON.parse(raw) : [new Date().getFullYear()];
-    const storageYear = parseInt(localStorage.getItem('currentYearSelected'), 10);
-    currentYear = availableYears.includes(storageYear) ? storageYear : (availableYears.includes(new Date().getFullYear()) ? new Date().getFullYear() : availableYears[0]);
-  } catch(e) {
-    availableYears = [new Date().getFullYear()];
-    currentYear = new Date().getFullYear();
-  }
-}
-
-function saveAvailableYears() {
-  localStorage.setItem('availableYears', JSON.stringify(availableYears));
-}
-
-function loadYearData(year) {
-  currentYear = year;
-  localStorage.setItem('currentYearSelected', year);
+async function loadAvailableYears() {
+  if (!window.api) return;
   
-  try {
-    const raw = localStorage.getItem('finanzasData_' + year);
-    if (raw) {
-      const data = JSON.parse(raw);
-      monthlyBudgets = data.monthlyBudgets || getEmptyBudgets();
-      investmentGoals = data.investmentGoals || [];
-      globalSavingsWithdrawals = data.globalSavingsWithdrawals || [];
-    } else {
-      monthlyBudgets = getEmptyBudgets();
-      investmentGoals = [];
-      globalSavingsWithdrawals = [];
-    }
-  } catch(e) {
-      monthlyBudgets = getEmptyBudgets();
-      investmentGoals = [];
-      globalSavingsWithdrawals = [];
+  APP_SETTINGS = await window.api.getSettings();
+  
+  availableYears = await window.api.getYears();
+  if (availableYears.length === 0) {
+    availableYears = [new Date().getFullYear()];
+    await window.api.addYear(availableYears[0]);
   }
+  
+  const storageYear = parseInt(APP_SETTINGS['currentYearSelected'], 10);
+  currentYear = availableYears.includes(storageYear) ? storageYear : (availableYears.includes(new Date().getFullYear()) ? new Date().getFullYear() : availableYears[0]);
+}
+
+async function saveAvailableYears() {
+  // individual years are saved via addYear directly now
+}
+
+async function loadYearData(year) {
+  currentYear = year;
+  if (!window.api) {
+    monthlyBudgets = getEmptyBudgets();
+    return;
+  }
+
+  await window.api.saveSetting('currentYearSelected', year);
+  const raw = await window.api.getYearData(year);
+  monthlyBudgets = getEmptyBudgets();
+
+  // Reassemble monthlyBudgets naturally from relational format
+  for (const inc of raw.incomes) {
+    monthlyBudgets[inc.month].incomes.push({ id: inc.id, amount: inc.amount, description: inc.description, dest: inc.dest, destLabel: inc.destLabel });
+    monthlyBudgets[inc.month].totalIncome += inc.amount;
+  }
+
+  for (const exp of raw.expenses) {
+    monthlyBudgets[exp.month].expenses.push({ id: exp.id, type: exp.type, amount: exp.amount, description: exp.description, category: exp.category, goalId: exp.goalId });
+  }
+
+  investmentGoals = raw.investmentGoals || [];
+  globalSavingsWithdrawals = raw.globalWithdrawals || [];
 }
 
 function saveYearData() {
-  const data = {
-    monthlyBudgets,
-    investmentGoals,
-    globalSavingsWithdrawals
-  };
-  localStorage.setItem('finanzasData_' + currentYear, JSON.stringify(data));
+  // Deprecated. We now persist immediately per action optimistically into SQL endpoints via IPC
 }
 
 function renderYearSidebar() {
@@ -213,7 +221,7 @@ function createNewYear() {
   }
   if (!availableYears.includes(val)) {
     availableYears.push(val);
-    saveAvailableYears();
+    if (window.api) window.api.addYear(val);
   }
   closeNewYearModal();
   selectYear(val);
@@ -257,16 +265,7 @@ function saveEditedYear() {
   const index = availableYears.indexOf(oldYear);
   if (index > -1) {
     availableYears[index] = newYear;
-    saveAvailableYears();
-
-    // Migrate data in localStorage
-    try {
-      const rawData = localStorage.getItem('finanzasData_' + oldYear);
-      if (rawData) {
-        localStorage.setItem('finanzasData_' + newYear, rawData);
-        localStorage.removeItem('finanzasData_' + oldYear);
-      }
-    } catch(e) {}
+    if (window.api) window.api.updateYear(oldYear, newYear);
     
     closeEditYearModal();
 
@@ -301,10 +300,7 @@ function confirmDeleteYear() {
   if (!y) return;
   
   availableYears = availableYears.filter(year => year !== y);
-  saveAvailableYears();
-  try {
-    localStorage.removeItem('finanzasData_' + y);
-  } catch(e) {}
+  if (window.api) window.api.deleteYear(y);
   
   closeDeleteYearModal();
   
@@ -335,20 +331,15 @@ function showValidationMessage(message) {
 }
 
 function getSavingsModes() {
-  try {
-    const raw = localStorage.getItem('savingsModes');
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  return APP_SETTINGS['savingsModes'] || [];
 }
 
 function setSavingsModes(modes) {
-  localStorage.setItem('savingsModes', JSON.stringify(modes));
+  APP_SETTINGS['savingsModes'] = modes;
+  if (window.api) window.api.saveSetting('savingsModes', modes);
 }
 
-function ensureDefaultSavingsModes() {
+async function ensureDefaultSavingsModes() {
   const existing = getSavingsModes();
   if (existing.length > 0) return;
 
@@ -359,26 +350,15 @@ function ensureDefaultSavingsModes() {
 }
 
 function getMonthModeSelection(month) {
-  try {
-    const raw = localStorage.getItem('monthSavingsModeSelection');
-    const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === 'object' ? (parsed[month] || '') : '';
-  } catch {
-    return '';
-  }
+  const parsed = APP_SETTINGS['monthSavingsModeSelection'] || {};
+  return parsed[month] || '';
 }
 
 function setMonthModeSelection(month, modeId) {
-  let parsed = {};
-  try {
-    const raw = localStorage.getItem('monthSavingsModeSelection');
-    parsed = raw ? JSON.parse(raw) : {};
-    if (!parsed || typeof parsed !== 'object') parsed = {};
-  } catch {
-    parsed = {};
-  }
+  let parsed = APP_SETTINGS['monthSavingsModeSelection'] || {};
   parsed[month] = modeId || '';
-  localStorage.setItem('monthSavingsModeSelection', JSON.stringify(parsed));
+  APP_SETTINGS['monthSavingsModeSelection'] = parsed;
+  if (window.api) window.api.saveSetting('monthSavingsModeSelection', parsed);
 }
 
 function getModeById(modeId) {
@@ -577,7 +557,11 @@ function addIncome(month) {
   }
 
   const budget = monthlyBudgets[month];
-  budget.incomes.push({ amount, description, dest, destLabel });
+  const id = 'inc-' + Math.random().toString(36).substr(2, 9);
+  const incObj = { id, amount, description, dest, destLabel };
+  budget.incomes.push(incObj);
+  if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month });
+
   budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
 
   updateIncomeDisplay(month);
@@ -635,7 +619,7 @@ function addExpense(month, type) {
     type, 
     amount, 
     description,
-    id: Date.now() // Unique ID for tracking
+    id: 'exp-' + Math.random().toString(36).substr(2, 9)
   };
 
   if (type === 'monthly' || type === 'personal') {
@@ -646,19 +630,25 @@ function addExpense(month, type) {
   }
 
   budget.expenses.push(expenseObj);
+  if (window.api) window.api.addExpense({ ...expenseObj, year: currentYear, month });
 
   if (type === 'investment' && goalId) {
     const goal = investmentGoals.find(g => g.id === goalId);
     if (goal) {
       if (!goal.transactions) goal.transactions = [];
-      goal.transactions.push({
-        id: expenseObj.id, // linked ID
+      const tx = {
+        id: expenseObj.id,
         amount: amount,
         description: `Aportación desde ${month}`,
         date: new Date().toISOString(),
-        isLinkedExpense: true // To identify it
-      });
+        isLinkedExpense: true
+      };
+      goal.transactions.push(tx);
       goal.currentAmount += amount;
+      if (window.api) {
+        window.api.addGoalTransaction({ ...tx, goalId: goal.id });
+        window.api.updateGoal({ ...goal, year: currentYear });
+      }
       renderInvestmentGoals();
     }
   }
@@ -1022,8 +1012,12 @@ function updateExpenseDisplay(month) {
 
 function deleteIncome(month, index) {
   const budget = monthlyBudgets[month];
+  const inc = budget.incomes[index];
+  if (window.api && inc.id) window.api.deleteIncome(inc.id);
+
   budget.incomes.splice(index, 1);
   budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
+
   updateIncomeDisplay(month);
   updateBudgetAllocations(month);
   updateSavingsChart();
@@ -1036,19 +1030,23 @@ function deleteExpense(month, index) {
   // If it's linked to an investment goal, remove the transaction and subtract the amount
   if (expense.type === 'investment' && expense.goalId) {
     const goal = investmentGoals.find(g => g.id === expense.goalId);
-    if (goal) {
-      if (goal.transactions) {
-        const tIndex = goal.transactions.findIndex(t => t.id === expense.id && t.isLinkedExpense);
-        if (tIndex > -1) {
-          goal.transactions.splice(tIndex, 1);
+    if (goal && goal.transactions) {
+      const txIndex = goal.transactions.findIndex(t => t.id === expense.id);
+      if (txIndex !== -1) {
+        goal.currentAmount -= goal.transactions[txIndex].amount;
+        goal.transactions.splice(txIndex, 1);
+        if (window.api) {
+          window.api.deleteGoalTransaction(expense.id);
+          window.api.updateGoal({ ...goal, year: currentYear });
         }
+        renderInvestmentGoals();
       }
-      goal.currentAmount -= expense.amount;
-      renderInvestmentGoals();
     }
   }
 
+  if (window.api && expense.id) window.api.deleteExpense(expense.id);
   budget.expenses.splice(index, 1);
+
   updateExpenseDisplay(month);
   updateSavingsChart();
   updateCategoryAutocomplete();
@@ -1359,12 +1357,14 @@ function saveCustomFund() {
       fund.name = name;
       fund.amount = amount;
       fund.isDefault = isDefault;
+      if (window.api) window.api.updateCustomFund(fund);
     }
   } else {
-    customFunds.push({ id: 'cf-' + Date.now(), name, amount, isDefault });
+    const newFund = { id: 'cf-' + Date.now(), name, amount, isDefault };
+    customFunds.push(newFund);
+    if (window.api) window.api.addCustomFund(newFund);
   }
 
-  saveCustomFunds(customFunds);
   closeCustomFundModal();
   updateSavingsChart();
 }
@@ -1377,7 +1377,7 @@ function deleteCustomFund(id) {
   }
   
   customFunds = customFunds.filter(f => f.id !== id);
-  saveCustomFunds(customFunds);
+  if (window.api) window.api.deleteCustomFund(id);
   updateSavingsChart();
 }
 
@@ -1410,13 +1410,15 @@ function createInvestmentGoal() {
 
   // Create new investment goal
   const goalId = 'goal-' + Date.now();
-  investmentGoals.push({
+  const newGoal = {
     id: goalId,
     name: name,
     targetAmount: targetAmount,
     currentAmount: 0,
     transactions: []
-  });
+  };
+  investmentGoals.push(newGoal);
+  if (window.api) window.api.addGoal({ ...newGoal, year: currentYear });
 
   nameInput.value = '';
   amountInput.value = '';
@@ -1444,13 +1446,18 @@ function addFundsToGoal(goalId) {
   const goal = investmentGoals.find(g => g.id === goalId);
   if (goal) {
     if (!goal.transactions) goal.transactions = []; // handle old data
-    goal.transactions.push({
-      id: Date.now(),
+    const tx = {
+      id: 'tx-' + Math.random().toString(36).substr(2, 9),
       amount: amount,
       description: desc,
       date: new Date().toISOString()
-    });
+    };
+    goal.transactions.push(tx);
     goal.currentAmount += amount;
+    if (window.api) {
+      window.api.addGoalTransaction({ ...tx, goalId: goal.id });
+      window.api.updateGoal({ ...goal, year: currentYear });
+    }
     amountInput.value = '';
     if (descInput) descInput.value = '';
     renderInvestmentGoals();
@@ -1461,6 +1468,7 @@ function deleteInvestmentGoal(goalId) {
   const index = investmentGoals.findIndex(g => g.id === goalId);
   if (index > -1) {
     investmentGoals.splice(index, 1);
+    if (window.api) window.api.deleteGoal(goalId);
     renderInvestmentGoals();
   }
 }
@@ -1510,6 +1518,7 @@ function saveEditedGoal() {
   if (goal) {
     goal.name = newName;
     goal.targetAmount = newAmount;
+    if (window.api) window.api.updateGoal({ ...goal, year: currentYear });
     closeEditGoalModal();
     renderInvestmentGoals();
   }
@@ -1868,6 +1877,8 @@ window.showYearMenu = showYearMenu;
 window.handleCtxEditYear = handleCtxEditYear;
 window.handleCtxDeleteYear = handleCtxDeleteYear;
 
+
+
 function deleteTransaction(goalId, transactionId) {
   const goal = investmentGoals.find(g => g.id === goalId);
   if (goal) {
@@ -1876,6 +1887,10 @@ function deleteTransaction(goalId, transactionId) {
       if (tIndex > -1) {
         goal.currentAmount -= goal.transactions[tIndex].amount;
         goal.transactions.splice(tIndex, 1);
+        if (window.api) {
+          window.api.deleteGoalTransaction(transactionId);
+          window.api.updateGoal({ ...goal, year: currentYear });
+        }
         renderInvestmentGoals();
       }
     }
@@ -1911,12 +1926,15 @@ function registerBeca() {
     const targetMonth = MONTHS[targetIndex];
     const budget = monthlyBudgets[targetMonth];
     
-    budget.incomes.push({
+    const incObj = {
+      id: 'inc-' + Math.random().toString(36).substr(2, 9),
       amount: monthlyAmount,
       description: `${name} (${i + 1}/${duration})`,
       dest: 'reparto',
       destLabel: 'Reparto'
-    });
+    };
+    budget.incomes.push(incObj);
+    if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month: targetMonth });
     
     budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
     updateIncomeDisplay(targetMonth);
@@ -1947,19 +1965,25 @@ function registerSavingsWithdrawal() {
   const budget = monthlyBudgets[destMonth];
   
   // Track withdrawal internally instead of negative income
-  globalSavingsWithdrawals.push({
+  const withdrawalObj = {
+    id: 'with-' + Math.random().toString(36).substr(2, 9),
     amount: Math.abs(amount),
     month: destMonth,
     date: new Date().toISOString()
-  });
+  };
+  globalSavingsWithdrawals.push(withdrawalObj);
+  if (window.api) window.api.addGlobalWithdrawal({ ...withdrawalObj, year: currentYear });
 
   // Create positive income corresponding to what is being injected into the month
-  budget.incomes.push({
+  const incObj = {
+    id: 'inc-' + Math.random().toString(36).substr(2, 9),
     amount: Math.abs(amount),
     description: `${name} (Inyección)`,
     dest: 'monthly',
     destLabel: 'Mensuales'
-  });
+  };
+  budget.incomes.push(incObj);
+  if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month: destMonth });
 
   budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
   updateIncomeDisplay(destMonth);
