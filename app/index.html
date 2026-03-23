@@ -892,6 +892,14 @@
     .custom-fund-card.is-default {
       border-left-color: #10b981;
     }
+
+    .no-scrollbars {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .no-scrollbars::-webkit-scrollbar {
+      display: none;
+    }
   </style>
 </head>
 
@@ -899,19 +907,32 @@
   <div class="container">
     <h1 class="app-title">
       Administración Financiera
-      <button class="settings-button" id="open-settings-button" title="Ajustes" aria-label="Abrir ajustes">⚙</button>
     </h1>
 
     <!-- Tabs Content -->
     <div class="tabs-wrapper">
       <!-- Main Tab: Chart with monthly savings -->
       <div id="main" class="tab-content active">
-        <h2>Gráfico de Ahorro Mensual</h2>
-        <div class="chart-container">
-          <canvas id="savingsChart"></canvas>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="margin: 0;">Gráfico de Ahorro Mensual</h2>
+          <button id="open-settings-button" title="Ajustes" style="padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: bold; background: transparent; color: #4b5563; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Ajustes ☰</button>
+        </div>
+        
+        <div style="display: flex; gap: 20px; align-items: stretch;">
+          <div class="chart-container" style="flex: 1; margin: 0; min-width: 0;">
+            <canvas id="savingsChart"></canvas>
+          </div>
+          
+          <div class="year-sidebar" style="width: 80px; background: transparent; display: flex; flex-direction: column; align-items: stretch; padding: 0; gap: 5px; flex-shrink: 0; height: 400px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 2px; margin-bottom: 5px;">
+              <div style="font-weight: 800; color: #4b5563; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Año</div>
+              <button onclick="openNewYearModal()" style="width: 24px; height: 24px; border-radius: 6px; font-size: 18px; line-height: 1; background: transparent; color: #4b5563; border: 1px solid #d1d5db; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'" title="Añadir Año">+</button>
+            </div>
+            <div id="year-list" style="display: flex; flex-direction: column; width: 100%; gap: 0; align-items: stretch; padding: 0; overflow-y: auto; flex: 1; min-height: 0;" class="no-scrollbars"></div>
+          </div>
         </div>
 
-        <div style="display: flex; align-items: stretch; gap: 15px; margin-bottom: 30px; overflow-x: auto; padding-bottom: 5px;" id="custom-funds-wrapper">
+        <div style="display: flex; align-items: stretch; gap: 15px; margin-bottom: 30px; margin-top: 20px; overflow-x: auto; padding-bottom: 5px;" id="custom-funds-wrapper">
           <div id="custom-funds-list" style="display: flex; gap: 15px;">
             <!-- Render custom funds here -->
           </div>
@@ -1183,6 +1204,56 @@
         <button class="btn-cancel" onclick="closeCustomFundModal()">Cancelar</button>
       </div>
     </div>
+  </div>
+
+  <!-- New Year Modal -->
+  <div class="modal-overlay" id="new-year-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="year-modal-title">
+      <h3 id="year-modal-title">Añadir Año</h3>
+      <div class="modal-form">
+        <input type="number" id="new-year-input" placeholder="Ej: 2024" min="2000" max="2100">
+      </div>
+      <div class="modal-actions">
+        <button onclick="createNewYear()">Añadir</button>
+        <button class="btn-cancel" onclick="closeNewYearModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Year Modal -->
+  <div class="modal-overlay" id="edit-year-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-year-modal-title">
+      <h3 id="edit-year-modal-title">Editar Año</h3>
+      <div class="modal-form">
+        <input type="hidden" id="edit-year-old">
+        <input type="number" id="edit-year-input" placeholder="Ej: 2024" min="2000" max="2100">
+      </div>
+      <div class="modal-actions">
+        <button onclick="saveEditedYear()">Guardar</button>
+        <button class="btn-cancel" onclick="closeEditYearModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Year Modal -->
+  <div class="modal-overlay" id="delete-year-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-year-modal-title">
+      <h3 id="delete-year-modal-title" style="color: #ef4444;">Eliminar Año</h3>
+      <div class="modal-form">
+        <p style="margin-bottom: 20px; font-size: 15px; color: #4b5563;" id="delete-year-message"></p>
+        <input type="hidden" id="delete-year-target">
+      </div>
+      <div class="modal-actions">
+        <button onclick="confirmDeleteYear()" style="background-color: #ef4444; color: white;">Sí, eliminar</button>
+        <button class="btn-cancel" onclick="closeDeleteYearModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Year Context Menu -->
+  <div id="year-context-menu" class="goal-options-menu" style="position: fixed; z-index: 9999; right: auto; top: auto; margin: 0; min-width: 130px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+    <button onclick="handleCtxEditYear()" style="padding: 10px 15px; width: 100%; text-align: left; background: transparent; border: none; border-bottom: 1px solid #e5e7eb; cursor: pointer; color: #4b5563; font-weight: bold; font-size: 13px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">✎ Editar</button>
+    <button onclick="handleCtxDeleteYear()" style="padding: 10px 15px; width: 100%; text-align: left; background: transparent; border: none; cursor: pointer; color: #ef4444; font-weight: bold; font-size: 13px;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">✕ Eliminar</button>
   </div>
 
   <script src="renderer.js"></script>

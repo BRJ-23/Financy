@@ -1,20 +1,26 @@
-const monthlyBudgets = {
-  enero: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  febrero: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  marzo: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  abril: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  mayo: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  junio: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  julio: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  agosto: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  septiembre: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  octubre: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  noviembre: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
-  diciembre: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 }
-};
+let currentYear = new Date().getFullYear();
+let availableYears = [];
 
-const investmentGoals = [];
-const globalSavingsWithdrawals = [];
+function getEmptyBudgets() {
+  return {
+    enero: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    febrero: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    marzo: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    abril: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    mayo: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    junio: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    julio: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    agosto: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    septiembre: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    octubre: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    noviembre: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 },
+    diciembre: { incomes: [], expenses: [], monthlyExpenses: 0, personalExpenses: 0, investments: 0, savings: 0, totalIncome: 0 }
+  };
+}
+
+let monthlyBudgets = getEmptyBudgets();
+let investmentGoals = [];
+let globalSavingsWithdrawals = [];
 let savingsChart = null;
 let validationMessageTimeout = null;
 let customFunds = [];
@@ -65,8 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(autocompleteList);
   }
 
+  loadAvailableYears();
+  loadYearData(currentYear);
+
   customFunds = getCustomFunds();
 
+  renderYearSidebar();
   initializeTabs();
   initializeMonthlyTabs();
   initializeSavingsChart();
@@ -76,6 +86,237 @@ document.addEventListener('DOMContentLoaded', () => {
   renderIncomeModeSelectors();
   updateCategoryAutocomplete();
 });
+
+function loadAvailableYears() {
+  try {
+    const raw = localStorage.getItem('availableYears');
+    availableYears = raw ? JSON.parse(raw) : [new Date().getFullYear()];
+    const storageYear = parseInt(localStorage.getItem('currentYearSelected'), 10);
+    currentYear = availableYears.includes(storageYear) ? storageYear : (availableYears.includes(new Date().getFullYear()) ? new Date().getFullYear() : availableYears[0]);
+  } catch(e) {
+    availableYears = [new Date().getFullYear()];
+    currentYear = new Date().getFullYear();
+  }
+}
+
+function saveAvailableYears() {
+  localStorage.setItem('availableYears', JSON.stringify(availableYears));
+}
+
+function loadYearData(year) {
+  currentYear = year;
+  localStorage.setItem('currentYearSelected', year);
+  
+  try {
+    const raw = localStorage.getItem('finanzasData_' + year);
+    if (raw) {
+      const data = JSON.parse(raw);
+      monthlyBudgets = data.monthlyBudgets || getEmptyBudgets();
+      investmentGoals = data.investmentGoals || [];
+      globalSavingsWithdrawals = data.globalSavingsWithdrawals || [];
+    } else {
+      monthlyBudgets = getEmptyBudgets();
+      investmentGoals = [];
+      globalSavingsWithdrawals = [];
+    }
+  } catch(e) {
+      monthlyBudgets = getEmptyBudgets();
+      investmentGoals = [];
+      globalSavingsWithdrawals = [];
+  }
+}
+
+function saveYearData() {
+  const data = {
+    monthlyBudgets,
+    investmentGoals,
+    globalSavingsWithdrawals
+  };
+  localStorage.setItem('finanzasData_' + currentYear, JSON.stringify(data));
+}
+
+function renderYearSidebar() {
+  const list = document.getElementById('year-list');
+  if (!list) return;
+  
+  const years = availableYears.sort((a,b) => b-a);
+  list.innerHTML = years.map((y, index) => {
+    const isSelected = y === currentYear;
+    const borderStyle = index < years.length - 1 ? 'border-bottom: 1px solid #e5e7eb;' : 'border-bottom: none;';
+    const bg = isSelected ? '#f3f4f6' : 'transparent';
+    const color = isSelected ? '#111827' : '#6b7280';
+    const shadow = isSelected ? 'box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);' : '';
+    
+    return `
+      <div style="position: relative; width: 100%; border: none; ${borderStyle}">
+        <button onclick="selectYear(${y})" oncontextmenu="showYearMenu(event, ${y})" style="width: 100%; padding: 12px 10px; font-size: 15px; font-weight: ${isSelected ? '800' : '600'}; background: ${bg}; color: ${color}; border: none; cursor: pointer; transition: all 0.2s; text-align: left; ${shadow}" onmouseover="if(${y} !== ${currentYear}) { this.style.background='#f9fafb'; this.style.color='#374151'; }" onmouseout="if(${y} !== ${currentYear}) { this.style.background='transparent'; this.style.color='#6b7280'; }">
+          ${y}
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+let activeYearContext = null;
+
+function showYearMenu(event, year) {
+  event.preventDefault();
+  activeYearContext = year;
+  const menu = document.getElementById('year-context-menu');
+  if (menu) {
+    document.querySelectorAll('.goal-options-menu.show').forEach(el => el.classList.remove('show'));
+    menu.style.left = event.clientX + 'px';
+    menu.style.top = event.clientY + 'px';
+    menu.classList.add('show');
+  }
+}
+
+function handleCtxEditYear() {
+  if (activeYearContext) {
+    openEditYearModal(activeYearContext);
+  }
+}
+
+function handleCtxDeleteYear() {
+  if (activeYearContext) {
+    deleteYear(activeYearContext);
+  }
+}
+
+function selectYear(year) {
+  if (currentYear === year) return;
+  loadYearData(year);
+  renderYearSidebar();
+  
+  // Re-render essentially everything
+  initializeMonthlyTabs(); // Re-creates DOM elements for newly loaded budgets
+  renderIncomeModeSelectors(); // Rebinds modes
+  updateSavingsChart();
+  renderInvestmentGoals();
+  updateCategoryAutocomplete();
+}
+
+function openNewYearModal() {
+  document.getElementById('new-year-input').value = new Date().getFullYear() + 1;
+  document.getElementById('new-year-modal').classList.add('open');
+}
+
+function closeNewYearModal() {
+  document.getElementById('new-year-modal').classList.remove('open');
+}
+
+function createNewYear() {
+  const val = parseInt(document.getElementById('new-year-input').value, 10);
+  if (!val || val < 2000 || val > 2100) {
+    showValidationMessage('Introduce un año válido');
+    return;
+  }
+  if (!availableYears.includes(val)) {
+    availableYears.push(val);
+    saveAvailableYears();
+  }
+  closeNewYearModal();
+  selectYear(val);
+}
+
+function openEditYearModal(oldYear) {
+  document.getElementById('edit-year-old').value = oldYear;
+  const input = document.getElementById('edit-year-input');
+  input.value = oldYear;
+  document.getElementById('edit-year-modal').classList.add('open');
+  
+  setTimeout(() => {
+    input.focus();
+    input.select();
+  }, 50);
+}
+
+function closeEditYearModal() {
+  document.getElementById('edit-year-modal').classList.remove('open');
+}
+
+function saveEditedYear() {
+  const oldYear = parseInt(document.getElementById('edit-year-old').value, 10);
+  const newYear = parseInt(document.getElementById('edit-year-input').value, 10);
+  
+  if (!newYear || newYear < 2000 || newYear > 2100) {
+    showValidationMessage('Introduce un año válido');
+    return;
+  }
+  
+  if (oldYear === newYear) {
+    closeEditYearModal();
+    return;
+  }
+
+  if (availableYears.includes(newYear)) {
+    showValidationMessage('Ese año ya existe. No puedes duplicarlo.');
+    return;
+  }
+
+  const index = availableYears.indexOf(oldYear);
+  if (index > -1) {
+    availableYears[index] = newYear;
+    saveAvailableYears();
+
+    // Migrate data in localStorage
+    try {
+      const rawData = localStorage.getItem('finanzasData_' + oldYear);
+      if (rawData) {
+        localStorage.setItem('finanzasData_' + newYear, rawData);
+        localStorage.removeItem('finanzasData_' + oldYear);
+      }
+    } catch(e) {}
+    
+    closeEditYearModal();
+
+    if (currentYear === oldYear) {
+      // selecting resets current state
+      currentYear = null;
+      selectYear(newYear);
+    } else {
+      renderYearSidebar();
+      updateSavingsChart(); // to recompute global savings if needed
+    }
+  }
+}
+
+function deleteYear(y) {
+  if (availableYears.length <= 1) {
+    showValidationMessage('Debes mantener al menos un año.');
+    return;
+  }
+  
+  document.getElementById('delete-year-target').value = y;
+  document.getElementById('delete-year-message').textContent = `¿Estás seguro de que deseas eliminar el año ${y} y todos sus datos asociados?`;
+  document.getElementById('delete-year-modal').classList.add('open');
+}
+
+function closeDeleteYearModal() {
+  document.getElementById('delete-year-modal').classList.remove('open');
+}
+
+function confirmDeleteYear() {
+  const y = parseInt(document.getElementById('delete-year-target').value, 10);
+  if (!y) return;
+  
+  availableYears = availableYears.filter(year => year !== y);
+  saveAvailableYears();
+  try {
+    localStorage.removeItem('finanzasData_' + y);
+  } catch(e) {}
+  
+  closeDeleteYearModal();
+  
+  if (currentYear === y) {
+    // If we're viewing the deleted year, switch to the first available one
+    currentYear = null;
+    selectYear(availableYears[0]);
+  } else {
+    renderYearSidebar();
+    updateSavingsChart(); // updates charts and global savings based on remaining years
+  }
+}
 
 function showValidationMessage(message) {
   const bar = document.getElementById('validation-bar');
@@ -961,6 +1202,8 @@ function updateSavingsChart() {
   savingsChart.data.datasets[0].data = savingsData;
   savingsChart.update();
   
+  saveYearData();
+
   if (typeof updateGlobalSavings === 'function') {
     updateGlobalSavings();
   }
@@ -969,26 +1212,39 @@ function updateSavingsChart() {
 function updateGlobalSavings() {
   let totalAppSavings = 0;
   
-  MONTHS.forEach(month => {
-    const budget = monthlyBudgets[month];
+  availableYears.forEach(year => {
+    const raw = localStorage.getItem('finanzasData_' + year);
+    let yearBudgets = {};
+    let yearWithdrawals = [];
+    if (year === currentYear) {
+      yearBudgets = monthlyBudgets;
+      yearWithdrawals = globalSavingsWithdrawals;
+    } else if (raw) {
+      const parsed = JSON.parse(raw);
+      yearBudgets = parsed.monthlyBudgets || getEmptyBudgets();
+      yearWithdrawals = parsed.globalSavingsWithdrawals || [];
+    } else {
+      yearBudgets = getEmptyBudgets();
+    }
     
-    // Only count savings if there is income
-    if (budget.totalIncome === 0) return;
-    
-    const monthlyUsed = budget.expenses.filter(e => e.type === 'monthly').reduce((sum, e) => sum + e.amount, 0);
-    const personalUsed = budget.expenses.filter(e => e.type === 'personal').reduce((sum, e) => sum + e.amount, 0);
-    const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((sum, e) => sum + e.amount, 0);
+    MONTHS.forEach(month => {
+      const budget = yearBudgets[month];
+      if (!budget || budget.totalIncome === 0) return;
+      
+      const monthlyUsed = budget.expenses.filter(e => e.type === 'monthly').reduce((sum, e) => sum + e.amount, 0);
+      const personalUsed = budget.expenses.filter(e => e.type === 'personal').reduce((sum, e) => sum + e.amount, 0);
+      const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((sum, e) => sum + e.amount, 0);
 
-    const monthlyLeftover = budget.monthlyExpenses - monthlyUsed;
-    const personalLeftover = budget.personalExpenses - personalUsed;
-    const investmentLeftover = budget.investments - investmentUsed;
+      const monthlyLeftover = budget.monthlyExpenses - monthlyUsed;
+      const personalLeftover = budget.personalExpenses - personalUsed;
+      const investmentLeftover = budget.investments - investmentUsed;
 
-    const monthSavings = budget.savings + monthlyLeftover + personalLeftover + investmentLeftover;
-    totalAppSavings += monthSavings;
+      totalAppSavings += (budget.savings + monthlyLeftover + personalLeftover + investmentLeftover);
+    });
+
+    const totalDeductions = yearWithdrawals.reduce((sum, w) => sum + w.amount, 0);
+    totalAppSavings -= totalDeductions;
   });
-
-  const totalDeductions = globalSavingsWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-  totalAppSavings -= totalDeductions;
 
   let globalTotal = 0;
   customFunds.forEach(fund => {
@@ -1334,6 +1590,7 @@ function renderInvestmentGoals() {
     `;
   }).join('');
   
+  saveYearData();
   updateInvestmentSelects();
 }
 
@@ -1595,6 +1852,20 @@ window.saveCustomFund = saveCustomFund;
 window.editCustomFund = editCustomFund;
 window.deleteCustomFund = deleteCustomFund;
 window.toggleCfOptions = toggleCfOptions;
+
+window.openNewYearModal = openNewYearModal;
+window.closeNewYearModal = closeNewYearModal;
+window.createNewYear = createNewYear;
+window.openEditYearModal = openEditYearModal;
+window.closeEditYearModal = closeEditYearModal;
+window.saveEditedYear = saveEditedYear;
+window.deleteYear = deleteYear;
+window.closeDeleteYearModal = closeDeleteYearModal;
+window.confirmDeleteYear = confirmDeleteYear;
+window.selectYear = selectYear;
+window.showYearMenu = showYearMenu;
+window.handleCtxEditYear = handleCtxEditYear;
+window.handleCtxDeleteYear = handleCtxDeleteYear;
 
 function deleteTransaction(goalId, transactionId) {
   const goal = investmentGoals.find(g => g.id === goalId);
