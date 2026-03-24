@@ -23,6 +23,8 @@ let monthlyBudgets = getEmptyBudgets();
 let investmentGoals = [];
 let globalSavingsWithdrawals = [];
 let savingsChart = null;
+let cumulativeChart = null;
+let activeChartIndex = 0; // 0 = monthly savings, 1 = cumulative
 let validationMessageTimeout = null;
 let customFunds = [];
 
@@ -1065,13 +1067,56 @@ function updateCategoryAutocomplete() {
 }
 
 function initializeSavingsChart() {
-  const ctx = document.getElementById('savingsChart').getContext('2d');
+  const CHART_LABELS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-  savingsChart = new Chart(ctx, {
+  const sharedOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { intersect: false, mode: 'index' },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: '#6b7280',
+          font: { size: 13, weight: '500' },
+          padding: 15,
+          boxWidth: 0,
+          boxHeight: 0
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        cornerRadius: 8,
+        titleFont: { size: 13, weight: 'bold' },
+        bodyFont: { size: 12 }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: '#9ca3af', font: { size: 12 } }
+      },
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false },
+        ticks: {
+          color: '#9ca3af',
+          font: { size: 12 },
+          callback: v => '€' + v.toFixed(0)
+        }
+      }
+    }
+  };
+
+  // ── Chart 1: Monthly savings ──────────────────────────────────────────
+  const ctx1 = document.getElementById('savingsChart').getContext('2d');
+  savingsChart = new Chart(ctx1, {
     type: 'line',
     data: {
-      labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+      labels: CHART_LABELS,
       datasets: [{
         label: 'Ahorro Mensual',
         data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1088,74 +1133,50 @@ function initializeSavingsChart() {
       }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        intersect: false,
-        mode: 'index'
-      },
+      ...sharedOptions,
       plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          labels: {
-            color: '#6b7280',
-            font: {
-              size: 13,
-              weight: '500'
-            },
-            padding: 15,
-            boxWidth: 0,
-            boxHeight: 0
-          }
-        },
+        ...sharedOptions.plugins,
         tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: 12,
-          cornerRadius: 8,
-          titleFont: {
-            size: 13,
-            weight: 'bold'
-          },
-          bodyFont: {
-            size: 12
-          },
-          callbacks: {
-            label: function (context) {
-              return 'Ahorro: €' + context.parsed.y.toFixed(2);
-            }
-          }
+          ...sharedOptions.plugins.tooltip,
+          callbacks: { label: ctx => 'Ahorro: €' + ctx.parsed.y.toFixed(2) }
+        }
+      }
+    }
+  });
+
+  // ── Chart 2: Cumulative savings ───────────────────────────────────────
+  const ctx2 = document.getElementById('cumulativeChart').getContext('2d');
+  cumulativeChart = new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels: CHART_LABELS,
+      datasets: [{
+        label: 'Ahorro Acumulado',
+        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.07)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#10b981',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      ...sharedOptions,
+      plugins: {
+        ...sharedOptions.plugins,
+        tooltip: {
+          ...sharedOptions.plugins.tooltip,
+          callbacks: { label: ctx => 'Acumulado: €' + ctx.parsed.y.toFixed(2) }
         }
       },
       scales: {
-        x: {
-          grid: {
-            display: false,
-            color: 'rgba(0, 0, 0, 0.05)'
-          },
-          ticks: {
-            color: '#9ca3af',
-            font: {
-              size: 12
-            }
-          }
-        },
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.05)',
-            drawBorder: false
-          },
-          ticks: {
-            color: '#9ca3af',
-            font: {
-              size: 12
-            },
-            callback: function (value) {
-              return '€' + value.toFixed(0);
-            }
-          }
-        }
+        ...sharedOptions.scales,
+        y: { ...sharedOptions.scales.y, beginAtZero: false }
       }
     }
   });
@@ -1163,10 +1184,89 @@ function initializeSavingsChart() {
   window.addEventListener('resize', handleChartResize);
 }
 
-function handleChartResize() {
-  if (savingsChart) {
-    savingsChart.resize();
+// Switches between chart 0 (monthly) and chart 1 (cumulative)
+function switchChart(direction) {
+  activeChartIndex = (activeChartIndex + direction + 2) % 2;
+
+  const savingsCanvas = document.getElementById('savingsChart');
+  const cumulativeCanvas = document.getElementById('cumulativeChart');
+  const indicator = document.getElementById('chart-indicator');
+
+  if (activeChartIndex === 0) {
+    savingsCanvas.style.display = '';
+    cumulativeCanvas.style.display = 'none';
+    if (indicator) indicator.textContent = '1 / 2';
+  } else {
+    savingsCanvas.style.display = 'none';
+    cumulativeCanvas.style.display = '';
+    if (indicator) indicator.textContent = '2 / 2';
+    updateCumulativeChart();
   }
+}
+
+// Calculates cumulative savings per month, starting from prior-year balances
+function updateCumulativeChart() {
+  if (!cumulativeChart) return;
+
+  // ── Baseline: savings from all previous years ─────────────────────────
+  let baseline = 0;
+  const prevYears = availableYears.filter(y => y < currentYear);
+
+  prevYears.forEach(year => {
+    // Try to read from SQLite cache via localStorage fallback (same as updateGlobalSavings)
+    const raw = localStorage.getItem('finanzasData_' + year);
+    let yearBudgets = {};
+    let yearWithdrawals = [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      yearBudgets = parsed.monthlyBudgets || getEmptyBudgets();
+      yearWithdrawals = parsed.globalSavingsWithdrawals || [];
+    } else {
+      yearBudgets = getEmptyBudgets();
+    }
+    MONTHS.forEach(m => {
+      const b = yearBudgets[m];
+      if (!b || b.totalIncome === 0) return;
+      const mUsed = b.expenses.filter(e => e.type === 'monthly').reduce((s, e) => s + e.amount, 0);
+      const pUsed = b.expenses.filter(e => e.type === 'personal').reduce((s, e) => s + e.amount, 0);
+      const iUsed = b.expenses.filter(e => e.type === 'investment').reduce((s, e) => s + e.amount, 0);
+      baseline += b.savings + (b.monthlyExpenses - mUsed) + (b.personalExpenses - pUsed) + (b.investments - iUsed);
+    });
+    baseline -= yearWithdrawals.reduce((s, w) => s + w.amount, 0);
+  });
+
+  // Add non-default fund amounts (manual balances independent of the app calculation)
+  customFunds.forEach(f => { if (!f.isDefault) baseline += f.amount; });
+
+  // ── Build cumulative array for current year ───────────────────────────
+  let running = baseline;
+  const data = MONTHS.map(month => {
+    const budget = monthlyBudgets[month];
+    if (budget.totalIncome === 0) return running;
+
+    const mUsed = budget.expenses.filter(e => e.type === 'monthly').reduce((s, e) => s + e.amount, 0);
+    const pUsed = budget.expenses.filter(e => e.type === 'personal').reduce((s, e) => s + e.amount, 0);
+    const iUsed = budget.expenses.filter(e => e.type === 'investment').reduce((s, e) => s + e.amount, 0);
+    const monthlySavings = budget.savings
+      + (budget.monthlyExpenses - mUsed)
+      + (budget.personalExpenses - pUsed)
+      + (budget.investments - iUsed);
+
+    running += monthlySavings;
+    return running;
+  });
+
+  // Subtract global withdrawals from current year
+  const totalWithdrawals = globalSavingsWithdrawals.reduce((s, w) => s + w.amount, 0);
+  const adjustedData = data.map(v => v - totalWithdrawals);
+
+  cumulativeChart.data.datasets[0].data = adjustedData;
+  cumulativeChart.update();
+}
+
+function handleChartResize() {
+  if (savingsChart) savingsChart.resize();
+  if (cumulativeChart) cumulativeChart.resize();
 }
 
 function updateSavingsChart() {
@@ -1190,6 +1290,11 @@ function updateSavingsChart() {
 
   savingsChart.data.datasets[0].data = savingsData;
   savingsChart.update();
+
+  // Keep cumulative chart in sync if it is currently visible
+  if (activeChartIndex === 1) {
+    updateCumulativeChart();
+  }
 
   saveYearData();
 

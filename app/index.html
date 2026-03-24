@@ -919,8 +919,17 @@
         </div>
         
         <div style="display: flex; gap: 20px; align-items: stretch;">
-          <div class="chart-container" style="flex: 1; margin: 0; min-width: 0;">
+          <div class="chart-container" style="flex: 1; margin: 0; min-width: 0; position: relative;">
+            <!-- Chart switcher controls -->
+            <div id="chart-switcher" style="position: absolute; top: 8px; left: 10px; z-index: 10; display: flex; align-items: center; gap: 2px;">
+              <button id="chart-prev" onclick="switchChart(-1)" title="Gráfica anterior" style="background: none; border: none; color: #9ca3af; font-size: 16px; line-height: 1; padding: 2px 5px; border-radius: 4px; cursor: pointer; transition: color 0.15s, background 0.15s;" onmouseover="this.style.color='#4b5563';this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.color='#9ca3af';this.style.background='none'">‹</button>
+              <span id="chart-indicator" style="font-size: 11px; color: #9ca3af; user-select: none; min-width: 28px; text-align: center;">1 / 2</span>
+              <button id="chart-next" onclick="switchChart(1)" title="Gráfica siguiente" style="background: none; border: none; color: #9ca3af; font-size: 16px; line-height: 1; padding: 2px 5px; border-radius: 4px; cursor: pointer; transition: color 0.15s, background 0.15s;" onmouseover="this.style.color='#4b5563';this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.color='#9ca3af';this.style.background='none'">›</button>
+            </div>
+            <!-- Chart 1: monthly savings -->
             <canvas id="savingsChart"></canvas>
+            <!-- Chart 2: cumulative savings -->
+            <canvas id="cumulativeChart" style="display: none;"></canvas>
           </div>
           
           <div class="year-sidebar" style="width: 80px; background: transparent; display: flex; flex-direction: column; align-items: stretch; padding: 0; gap: 5px; flex-shrink: 0; height: 400px;">
