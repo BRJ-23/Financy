@@ -1239,7 +1239,7 @@ async function updateCumulativeChart() {
       if (!b || b.totalIncome === 0) return;
 
       // Usando allocations por defecto para años pasados (simplificación coherente con updateGlobalSavings)
-      const mPct = 40/100, pPct = 20/100, iPct = 20/100, sPct = 20/100;
+      const mPct = 40 / 100, pPct = 20 / 100, iPct = 20 / 100, sPct = 20 / 100;
 
       const distInc = b.incomes.filter(i => !i.dest || i.dest === 'reparto').reduce((s, inc) => s + inc.amount, 0);
       const dM = b.incomes.filter(i => i.dest === 'monthly').reduce((s, inc) => s + inc.amount, 0);
@@ -1341,6 +1341,7 @@ async function updateGlobalSavings() {
   let totalAppSavings = 0;
 
   for (const year of availableYears) {
+    if (year > currentYear) continue;
     let yearBudgets = {};
     let yearWithdrawals = [];
 
@@ -1722,7 +1723,7 @@ function renderInvestmentGoals() {
           <div class="goal-transaction-item">
             <div class="desc" title="${t.description}">${t.description}</div>
             <div class="amt ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}</div>
-            ${canDelete ? `<button class="delete-item-btn" onclick="deleteTransaction('${goal.id}', ${t.id})" title="Eliminar movimiento">✕</button>` : ''}
+            ${canDelete ? `<button class="delete-item-btn" onclick="deleteTransaction('${goal.id}', '${t.id}')" title="Eliminar movimiento">✕</button>` : ''}
           </div>
         `;
       }).join('');
