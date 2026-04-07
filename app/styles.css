@@ -592,9 +592,6 @@ button:hover {
 }
 
 /* Settings button + modal */
-.app-title {
-  position: relative;
-}
 
 .settings-button {
   position: absolute;
