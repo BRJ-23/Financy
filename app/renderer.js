@@ -1787,9 +1787,6 @@ function updateInvestmentSelects() {
 }
 
 async function initializeSettingsUI() {
-  const overlay = document.getElementById('settings-overlay');
-  const openButton = document.getElementById('open-settings-button');
-  const closeButton = document.getElementById('close-settings-button');
   const navButtons = document.querySelectorAll('.settings-nav-button');
   const sections = {
     general: document.getElementById('settings-section-general'),
@@ -1798,27 +1795,8 @@ async function initializeSettingsUI() {
   };
   const title = document.getElementById('settings-title');
 
-  if (!overlay || !closeButton || !title) return;
+  if (!sections.general || !title) return;
 
-  function openSettings() {
-    overlay.classList.add('open');
-    overlay.setAttribute('aria-hidden', 'false');
-  }
-
-  function closeSettings() {
-    overlay.classList.remove('open');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
-
-  // Expose globally so the HTML onclick attribute can call them directly
-  window.openSettingsPanel = openSettings;
-  window.closeSettingsPanel = closeSettings;
-
-  if (openButton) openButton.addEventListener('click', openSettings);
-  closeButton.addEventListener('click', closeSettings);
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) closeSettings();
-  });
 
   navButtons.forEach((btn) => {
     btn.addEventListener('click', () => {

@@ -31,6 +31,9 @@
       <button class="tab-button" data-tab="octubre">Octubre</button>
       <button class="tab-button" data-tab="noviembre">Noviembre</button>
       <button class="tab-button" data-tab="diciembre">Diciembre</button>
+      <div style="margin-top: auto; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-bottom: 20px;">
+        <button class="tab-button" data-tab="ajustes">Ajustes ⚙</button>
+      </div>
     </div>
 
     <!-- Tabs Content -->
@@ -39,10 +42,6 @@
       <div id="main" class="tab-content active">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <h2 style="margin: 0;">Gráfico de Ahorro Mensual</h2>
-          <button id="open-settings-button" title="Ajustes" onclick="openSettingsPanel && openSettingsPanel()"
-            style="padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: bold; background: transparent; color: #4b5563; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;"
-            onmouseover="this.style.background='rgba(0,0,0,0.05)'"
-            onmouseout="this.style.background='transparent'">Ajustes ☰</button>
         </div>
 
         <div style="display: flex; gap: 20px; align-items: stretch;">
@@ -128,200 +127,194 @@
       <div id="octubre" class="tab-content"></div>
       <div id="noviembre" class="tab-content"></div>
       <div id="diciembre" class="tab-content"></div>
-    </div>
-  </div>
 
-  <!-- Settings Modal -->
-  <div class="settings-overlay" id="settings-overlay" aria-hidden="true">
-    <div class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-      <div class="settings-sidebar">
-        <div class="settings-sidebar-title">Ajustes</div>
-        <button class="settings-nav-button active" data-settings-section="general">General</button>
-        <button class="settings-nav-button" data-settings-section="modos-ahorro">Modos ahorro</button>
-        <button class="settings-nav-button" data-settings-section="modos-especiales">Modos Especiales</button>
-      </div>
-      <div class="settings-content">
-        <div class="settings-header">
-          <h3 id="settings-title">General</h3>
-          <button class="settings-close" id="close-settings-button" onclick="closeSettingsPanel && closeSettingsPanel()"
-            aria-label="Cerrar ajustes">✕</button>
-        </div>
-
-        <div id="settings-section-general">
-          <p class="settings-section-description">
-            Ajustes básicos de la aplicación (prototipo).
-          </p>
-          <div class="settings-field-group">
-            <label for="settings-currency">Moneda por defecto</label>
-            <select id="settings-currency">
-              <option value="EUR">Euro (€)</option>
-              <option value="USD">Dólar (US$)</option>
-              <option value="GBP">Libra (£)</option>
-            </select>
+      <!-- Settings Tab -->
+      <div id="ajustes" class="tab-content">
+        <div class="settings-workspace-layout">
+          <div class="settings-sidebar">
+            <div class="settings-sidebar-title">Configuración</div>
+            <button class="settings-nav-button active" data-settings-section="general">General</button>
+            <button class="settings-nav-button" data-settings-section="modos-ahorro">Modos ahorro</button>
+            <button class="settings-nav-button" data-settings-section="modos-especiales">Modos Especiales</button>
           </div>
-        </div>
-
-        <div id="settings-section-modos-ahorro" style="display:none;">
-          <p class="settings-section-description">
-            Crea perfiles de reparto para las 4 columnas. La suma debe ser 100%.
-          </p>
-
-          <div class="modes-grid">
-            <div class="modes-list">
-              <div class="modes-list-header">
-                <strong>Perfiles</strong>
-                <button id="modes-create">Nuevo</button>
-              </div>
-              <div id="modes-items" class="modes-items"></div>
+          <div class="settings-content">
+            <div class="settings-header">
+              <h3 id="settings-title">General</h3>
             </div>
 
-            <div>
+            <div id="settings-section-general">
+              <p class="settings-section-description">
+                Ajustes básicos de la aplicación.
+              </p>
               <div class="settings-field-group">
-                <label for="mode-name">Nombre del perfil</label>
-                <input id="mode-name" type="text" placeholder="Ej: Conservador" />
-                <small>Se usará al seleccionarlo en cada mes.</small>
-              </div>
-
-              <div class="settings-field-group">
-                <label>
-                  <input id="mode-default" type="checkbox" />
-                  Marcar como perfil por defecto
-                </label>
-                <small>Este perfil se aplicará por defecto en los meses nuevos.</small>
-              </div>
-
-              <div class="mode-alloc-grid">
-                <div class="settings-field-group">
-                  <label for="mode-monthly">Gasto Mensual (%)</label>
-                  <input id="mode-monthly" type="number" min="0" step="0.1" />
-                </div>
-                <div class="settings-field-group">
-                  <label for="mode-personal">Personal (%)</label>
-                  <input id="mode-personal" type="number" min="0" step="0.1" />
-                </div>
-                <div class="settings-field-group">
-                  <label for="mode-investment">Inversiones (%)</label>
-                  <input id="mode-investment" type="number" min="0" step="0.1" />
-                </div>
-                <div class="settings-field-group">
-                  <label for="mode-savings">Ahorro (%)</label>
-                  <input id="mode-savings" type="number" min="0" step="0.1" />
-                </div>
-              </div>
-
-              <div class="mode-summary">
-                <span id="mode-sum" class="mode-badge">Total: 0%</span>
-                <button id="modes-save">Guardar</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="settings-section-modos-especiales" style="display:none;">
-          <p class="settings-section-description">
-            Modos especiales para gestionar ingresos atípicos y retiros de ahorros.
-          </p>
-
-          <div class="modes-list"
-            style="margin-bottom: 24px; padding: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;">
-            <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-              <input type="text" id="special-mode-beca-name" value="Modo Beca"
-                style="font-weight: 600; font-size: 14px; border: none; background: transparent; width: 100%; max-width: 250px; color: #111827; outline: none; border-bottom: 1px dashed #d1d5db; padding-bottom: 2px;">
-            </div>
-            <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px; margin-top: 0;">Reparte un ingreso
-              uniformemente a lo largo de varios meses definidos. Registra una sola cantidad y la aplicación creará los
-              ingresos mensuales proporcionales.</p>
-
-            <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
-              <div style="width: 110px;">
-                <label
-                  style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Total
-                  Ingreso (€)</label>
-                <input id="beca-amount" type="number" min="0" step="0.01"
-                  style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
-              </div>
-              <div style="width: 110px;">
-                <label
-                  style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Mes
-                  inicio</label>
-                <select id="beca-start-month"
-                  style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
-                  <option value="enero">Enero</option>
-                  <option value="febrero">Febrero</option>
-                  <option value="marzo">Marzo</option>
-                  <option value="abril">Abril</option>
-                  <option value="mayo">Mayo</option>
-                  <option value="junio">Junio</option>
-                  <option value="julio">Julio</option>
-                  <option value="agosto">Agosto</option>
-                  <option value="septiembre">Septiembre</option>
-                  <option value="octubre">Octubre</option>
-                  <option value="noviembre">Noviembre</option>
-                  <option value="diciembre">Diciembre</option>
+                <label for="settings-currency">Moneda por defecto</label>
+                <select id="settings-currency">
+                  <option value="EUR">Euro (€)</option>
+                  <option value="USD">Dólar (US$)</option>
+                  <option value="GBP">Libra (£)</option>
                 </select>
               </div>
-              <div style="width: 80px;">
-                <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Nº
-                  Meses</label>
-                <input id="beca-months" type="number" min="1" step="1"
-                  style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
-              </div>
-              <div style="width: 90px;">
-                <button id="beca-register"
-                  style="padding: 8px 0; font-size: 13px; font-weight: 600; line-height: normal; margin: 0; width: 100%; box-sizing: border-box; height: 35px;">Registrar</button>
-              </div>
             </div>
-          </div>
 
-          <div class="modes-list"
-            style="padding: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;">
-            <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-              <input type="text" id="special-mode-savings-name" value="Modo Vivir de ahorros"
-                style="font-weight: 600; font-size: 14px; border: none; background: transparent; width: 100%; max-width: 250px; color: #111827; outline: none; border-bottom: 1px dashed #d1d5db; padding-bottom: 2px;">
-            </div>
-            <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px; margin-top: 0;">Permite inyectar dinero en
-              un mes determinado tomado del propio fondo global de ahorros (restándolo de la cifra de ahorro). Se
-              añadirá a Gastos Mensuales por defecto.</p>
+            <div id="settings-section-modos-ahorro" style="display:none;">
+              <p class="settings-section-description">
+                Crea perfiles de reparto para las 4 columnas. La suma debe ser 100%.
+              </p>
 
-            <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
-              <div style="width: 110px;">
-                <label
-                  style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Cantidad
-                  (€)</label>
-                <input id="savings-withdrawal-amount" type="number" min="0" step="0.01"
-                  style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
-              </div>
-              <div style="width: 110px;">
-                <label
-                  style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Mes
-                  destino</label>
-                <select id="savings-withdrawal-month"
-                  style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
-                  <option value="enero">Enero</option>
-                  <option value="febrero">Febrero</option>
-                  <option value="marzo">Marzo</option>
-                  <option value="abril">Abril</option>
-                  <option value="mayo">Mayo</option>
-                  <option value="junio">Junio</option>
-                  <option value="julio">Julio</option>
-                  <option value="agosto">Agosto</option>
-                  <option value="septiembre">Septiembre</option>
-                  <option value="octubre">Octubre</option>
-                  <option value="noviembre">Noviembre</option>
-                  <option value="diciembre">Diciembre</option>
-                </select>
-              </div>
-              <div style="width: 90px;">
-                <button id="savings-withdrawal-register"
-                  style="padding: 8px 0; font-size: 13px; font-weight: 600; line-height: normal; margin: 0; width: 100%; box-sizing: border-box; height: 35px;">Registrar</button>
+              <div class="modes-grid">
+                <div class="modes-list">
+                  <div class="modes-list-header">
+                    <strong>Perfiles</strong>
+                    <button id="modes-create">Nuevo</button>
+                  </div>
+                  <div id="modes-items" class="modes-items"></div>
+                </div>
+
+                <div>
+                  <div class="settings-field-group">
+                    <label for="mode-name">Nombre del perfil</label>
+                    <input id="mode-name" type="text" placeholder="Ej: Conservador" />
+                    <small>Se usará al seleccionarlo en cada mes.</small>
+                  </div>
+
+                  <div class="settings-field-group">
+                    <label>
+                      <input id="mode-default" type="checkbox" />
+                      Marcar como perfil por defecto
+                    </label>
+                    <small>Este perfil se aplicará por defecto en los meses nuevos.</small>
+                  </div>
+
+                  <div class="mode-alloc-grid">
+                    <div class="settings-field-group">
+                      <label for="mode-monthly">Gasto Mensual (%)</label>
+                      <input id="mode-monthly" type="number" min="0" step="0.1" />
+                    </div>
+                    <div class="settings-field-group">
+                      <label for="mode-personal">Personal (%)</label>
+                      <input id="mode-personal" type="number" min="0" step="0.1" />
+                    </div>
+                    <div class="settings-field-group">
+                      <label for="mode-investment">Inversiones (%)</label>
+                      <input id="mode-investment" type="number" min="0" step="0.1" />
+                    </div>
+                    <div class="settings-field-group">
+                      <label for="mode-savings">Ahorro (%)</label>
+                      <input id="mode-savings" type="number" min="0" step="0.1" />
+                    </div>
+                  </div>
+
+                  <div class="mode-summary">
+                    <span id="mode-sum" class="mode-badge">Total: 0%</span>
+                    <button id="modes-save">Guardar</button>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <div id="settings-section-modos-especiales" style="display:none;">
+              <p class="settings-section-description">
+                Modos especiales para gestionar ingresos atípicos y retiros de ahorros.
+              </p>
+
+              <div class="modes-list"
+                style="margin-bottom: 24px; padding: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;">
+                <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                  <input type="text" id="special-mode-beca-name" value="Modo Beca"
+                    style="font-weight: 600; font-size: 14px; border: none; background: transparent; width: 100%; max-width: 250px; color: #111827; outline: none; border-bottom: 1px dashed #d1d5db; padding-bottom: 2px;">
+                </div>
+                <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px; margin-top: 0;">Reparte un ingreso
+                  uniformemente a lo largo de varios meses definidos.</p>
+
+                <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+                  <div style="width: 110px;">
+                    <label
+                      style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Total
+                      Ingreso (€)</label>
+                    <input id="beca-amount" type="number" min="0" step="0.01"
+                      style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                  </div>
+                  <div style="width: 110px;">
+                    <label
+                      style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Mes
+                      inicio</label>
+                    <select id="beca-start-month"
+                      style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                      <option value="enero">Enero</option>
+                      <option value="febrero">Febrero</option>
+                      <option value="marzo">Marzo</option>
+                      <option value="abril">Abril</option>
+                      <option value="mayo">Mayo</option>
+                      <option value="junio">Junio</option>
+                      <option value="julio">Julio</option>
+                      <option value="agosto">Agosto</option>
+                      <option value="septiembre">Septiembre</option>
+                      <option value="octubre">Octubre</option>
+                      <option value="noviembre">Noviembre</option>
+                      <option value="diciembre">Diciembre</option>
+                    </select>
+                  </div>
+                  <div style="width: 80px;">
+                    <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Nº
+                      Meses</label>
+                    <input id="beca-months" type="number" min="1" step="1"
+                      style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                  </div>
+                  <div style="width: 90px;">
+                    <button id="beca-register"
+                      style="padding: 8px 0; font-size: 13px; font-weight: 600; line-height: normal; margin: 0; width: 100%; box-sizing: border-box; height: 35px;">Registrar</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modes-list"
+                style="padding: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;">
+                <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                  <input type="text" id="special-mode-savings-name" value="Modo Vivir de ahorros"
+                    style="font-weight: 600; font-size: 14px; border: none; background: transparent; width: 100%; max-width: 250px; color: #111827; outline: none; border-bottom: 1px dashed #d1d5db; padding-bottom: 2px;">
+                </div>
+                <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px; margin-top: 0;">Permite inyectar dinero en
+                  un mes determinado tomado del propio fondo global de ahorros.</p>
+
+                <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+                  <div style="width: 110px;">
+                    <label
+                      style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Cantidad
+                      (€)</label>
+                    <input id="savings-withdrawal-amount" type="number" min="0" step="0.01"
+                      style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                  </div>
+                  <div style="width: 110px;">
+                    <label
+                      style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Mes
+                      destino</label>
+                    <select id="savings-withdrawal-month"
+                      style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                      <option value="enero">Enero</option>
+                      <option value="febrero">Febrero</option>
+                      <option value="marzo">Marzo</option>
+                      <option value="abril">Abril</option>
+                      <option value="mayo">Mayo</option>
+                      <option value="junio">Junio</option>
+                      <option value="julio">Julio</option>
+                      <option value="agosto">Agosto</option>
+                      <option value="septiembre">Septiembre</option>
+                      <option value="octubre">Octubre</option>
+                      <option value="noviembre">Noviembre</option>
+                      <option value="diciembre">Diciembre</option>
+                    </select>
+                  </div>
+                  <div style="width: 90px;">
+                    <button id="savings-withdrawal-register"
+                      style="padding: 8px 0; font-size: 13px; font-weight: 600; line-height: normal; margin: 0; width: 100%; box-sizing: border-box; height: 35px;">Registrar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
-
       </div>
-    </div>
-  </div>
 
   <!-- New Goal Modal -->
   <div class="modal-overlay" id="new-goal-modal">
