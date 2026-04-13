@@ -1,4 +1,4 @@
-# Administracion
+# Financy
 
 Aplicación de escritorio para gestionar movimientos financieros personales, construida con **Electron** y **better-sqlite3**.
 
