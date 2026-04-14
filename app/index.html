@@ -18,6 +18,14 @@
         </h1>
       </div>
       <button class="tab-button active" data-tab="main">Panel Principal</button>
+      <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 10px;">
+        <button onclick="document.getElementById('year-selection-modal').classList.add('open')" id="sidebar-year-button" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px 12px 25px; background: transparent; border: none; border-left: 4px solid transparent; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb';" onmouseout="this.style.background='transparent';">
+          <span style="font-size: 14px; color: #4b5563; font-weight: 500;">Año Seleccionado</span>
+          <div style="display: flex; align-items: center;">
+            <span id="sidebar-year-display" style="font-size: 13px; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 4px 10px; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">####</span>
+          </div>
+        </button>
+      </div>
       <div class="nav-section-title" style="font-size: 11px; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin: 20px 20px 10px 20px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;">
         <span>Meses</span>
         <div style="display: flex; gap: 8px;">
@@ -84,23 +92,6 @@
             <canvas id="savingsChart"></canvas>
             <!-- Chart 2: cumulative savings -->
             <canvas id="cumulativeChart" style="display: none;"></canvas>
-          </div>
-
-          <div class="year-sidebar"
-            style="width: 80px; background: transparent; display: flex; flex-direction: column; align-items: stretch; padding: 0; gap: 5px; flex-shrink: 0; height: 400px;">
-            <div
-              style="display: flex; align-items: center; justify-content: space-between; padding: 0 2px; margin-bottom: 5px;">
-              <div
-                style="font-weight: 800; color: #4b5563; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
-                Año</div>
-              <button onclick="openNewYearModal()"
-                style="width: 24px; height: 24px; border-radius: 6px; font-size: 18px; line-height: 1; background: transparent; color: #4b5563; border: 1px solid #d1d5db; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;"
-                onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'"
-                title="Añadir Año">+</button>
-            </div>
-            <div id="year-list"
-              style="display: flex; flex-direction: column; width: 100%; gap: 0; align-items: stretch; padding: 0; overflow-y: auto; flex: 1; min-height: 0;"
-              class="no-scrollbars"></div>
           </div>
         </div>
 
@@ -334,6 +325,22 @@
           </div>
         </div>
       </div>
+
+  <!-- Year Selection Modal -->
+  <div class="modal-overlay" id="year-selection-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="year-selection-modal-title">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 id="year-selection-modal-title" style="margin: 0;">Seleccionar Año Activo</h3>
+        <button onclick="openNewYearModal()" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: #e0edff; border: none; border-radius: 6px; color: #1d4ed8; font-size: 20px; font-weight: bold; cursor: pointer; transition: background 0.2s;" title="Añadir nuevo año" onmouseover="this.style.background='#bfdbfe';" onmouseout="this.style.background='#e0edff';">+</button>
+      </div>
+      <div class="modal-form">
+        <div id="year-list" style="display: flex; flex-direction: column; width: 100%; gap: 8px; align-items: stretch; padding: 0; max-height: 300px; overflow-y: auto;" class="no-scrollbars"></div>
+      </div>
+      <div class="modal-actions" style="margin-top: 20px;">
+        <button class="btn-cancel" onclick="document.getElementById('year-selection-modal').classList.remove('open')">Cerrar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- New Goal Modal -->
   <div class="modal-overlay" id="new-goal-modal">

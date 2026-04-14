@@ -139,17 +139,23 @@ function renderYearSidebar() {
   if (!list) return;
 
   const years = availableYears.sort((a, b) => b - a);
-  list.innerHTML = years.map((y, index) => {
-    const isSelected = y === currentYear;
-    const borderStyle = index < years.length - 1 ? 'border-bottom: 1px solid #e5e7eb;' : 'border-bottom: none;';
-    const bg = isSelected ? '#f3f4f6' : 'transparent';
-    const color = isSelected ? '#111827' : '#6b7280';
-    const shadow = isSelected ? 'box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);' : '';
 
+  const displayEl = document.getElementById('sidebar-year-display');
+  if (displayEl) {
+    displayEl.textContent = currentYear || 'Ninguno';
+  }
+
+  list.innerHTML = years.map(y => {
+    const isSelected = y === currentYear;
+    const bg = isSelected ? '#eff6ff' : '#ffffff';
+    const border = isSelected ? 'border: 2px solid #3b82f6;' : 'border: 1px solid #d1d5db;';
+    const color = isSelected ? '#1d4ed8' : '#374151';
+    
     return `
-      <div style="position: relative; width: 100%; border: none; ${borderStyle}">
-        <button onclick="selectYear(${y})" oncontextmenu="showYearMenu(event, ${y})" style="width: 100%; padding: 12px 10px; font-size: 15px; font-weight: ${isSelected ? '800' : '600'}; background: ${bg}; color: ${color}; border: none; cursor: pointer; transition: all 0.2s; text-align: left; ${shadow}" onmouseover="if(${y} !== ${currentYear}) { this.style.background='#f9fafb'; this.style.color='#374151'; }" onmouseout="if(${y} !== ${currentYear}) { this.style.background='transparent'; this.style.color='#6b7280'; }">
-          ${y}
+      <div style="position: relative; width: 100%;">
+        <button onclick="selectYear(${y})" oncontextmenu="showYearMenu(event, ${y})" style="width: 100%; padding: 16px 20px; font-size: 16px; font-weight: ${isSelected ? '700' : '500'}; background: ${bg}; color: ${color}; ${border} border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center;" onmouseover="if(${y} !== ${currentYear}) { this.style.borderColor='#9ca3af'; this.style.background='#f9fafb'; }" onmouseout="if(${y} !== ${currentYear}) { this.style.borderColor='#d1d5db'; this.style.background='#ffffff'; }">
+          <span>📅 ${y}</span>
+          ${isSelected ? '<span style="font-size: 12px; background: #3b82f6; color: white; padding: 2px 8px; border-radius: 999px;">ACTIVO</span>' : '<span style="font-size: 12px; color: #9ca3af;">Click para seleccionar</span>'}
         </button>
       </div>
     `;
@@ -183,6 +189,9 @@ function handleCtxDeleteYear() {
 }
 
 function selectYear(year) {
+  const modal = document.getElementById('year-selection-modal');
+  if (modal) modal.classList.remove('open');
+
   if (currentYear === year) return;
   loadYearData(year);
   renderYearSidebar();
