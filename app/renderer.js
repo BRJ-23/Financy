@@ -147,16 +147,30 @@ function renderYearSidebar() {
 
   list.innerHTML = years.map(y => {
     const isSelected = y === currentYear;
-    const bg = isSelected ? '#eff6ff' : '#ffffff';
-    const border = isSelected ? 'border: 2px solid #3b82f6;' : 'border: 1px solid #d1d5db;';
-    const color = isSelected ? '#1d4ed8' : '#374151';
-    
     return `
-      <div style="position: relative; width: 100%;">
-        <button onclick="selectYear(${y})" oncontextmenu="showYearMenu(event, ${y})" style="width: 100%; padding: 16px 20px; font-size: 16px; font-weight: ${isSelected ? '700' : '500'}; background: ${bg}; color: ${color}; ${border} border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center;" onmouseover="if(${y} !== ${currentYear}) { this.style.borderColor='#9ca3af'; this.style.background='#f9fafb'; }" onmouseout="if(${y} !== ${currentYear}) { this.style.borderColor='#d1d5db'; this.style.background='#ffffff'; }">
-          <span>📅 ${y}</span>
-          ${isSelected ? '<span style="font-size: 12px; background: #3b82f6; color: white; padding: 2px 8px; border-radius: 999px;">ACTIVO</span>' : '<span style="font-size: 12px; color: #9ca3af;">Click para seleccionar</span>'}
-        </button>
+      <div class="year-card ${isSelected ? 'active' : ''}" style="
+        background: white; 
+        border-radius: 12px; 
+        padding: 24px; 
+        box-shadow: ${isSelected ? '0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05)' : '0 4px 6px -1px rgba(0, 0, 0, 0.05)'}; 
+        border: 2px solid ${isSelected ? '#3b82f6' : '#e5e7eb'}; 
+        transition: all 0.2s ease-in-out;
+        position: relative;
+        cursor: pointer;
+      " onclick="selectYear(${y})" oncontextmenu="showYearMenu(event, ${y})"
+      onmouseover="this.style.borderColor='${isSelected ? '#3b82f6' : '#9ca3af'}'; this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';"
+      onmouseout="this.style.borderColor='${isSelected ? '#3b82f6' : '#e5e7eb'}'; this.style.transform='translateY(0)'; this.style.boxShadow='${isSelected ? '0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05)' : '0 4px 6px -1px rgba(0, 0, 0, 0.05)'}';">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+           <span style="font-size: 24px; font-weight: 800; color: ${isSelected ? '#1d4ed8' : '#1f2937'};">📅 ${y}</span>
+           ${isSelected ? '<span style="font-size: 10px; font-weight: 700; background: #3b82f6; color: white; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase;">Activo</span>' : ''}
+        </div>
+        <p style="font-size: 13px; color: #6b7280; line-height: 1.5; margin: 0 0 20px 0;">Gestión financiera y seguimiento de objetivos para el periodo ${y}.</p>
+        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f3f4f6; pt: 15px; margin-top: auto; padding-top: 15px;">
+           <span style="font-size: 11px; color: #9ca3af; font-weight: 500;">Click derecho para más opciones</span>
+           <div style="width: 28px; height: 28px; border-radius: 50%; background: ${isSelected ? '#eff6ff' : '#f9fafb'}; display: flex; align-items: center; justify-content: center; color: ${isSelected ? '#3b82f6' : '#9ca3af'}; transition: all 0.2s;">
+             ${isSelected ? '✓' : '→'}
+           </div>
+        </div>
       </div>
     `;
   }).join('');
@@ -189,10 +203,12 @@ function handleCtxDeleteYear() {
 }
 
 function selectYear(year) {
-  const modal = document.getElementById('year-selection-modal');
-  if (modal) modal.classList.remove('open');
-
-  if (currentYear === year) return;
+  if (currentYear === year) {
+    const mainTabBtn = document.querySelector('.tab-button[data-tab="main"]');
+    if (mainTabBtn) mainTabBtn.click();
+    return;
+  }
+  
   loadYearData(year);
   renderYearSidebar();
 
@@ -201,6 +217,9 @@ function selectYear(year) {
   updateSavingsChart();
   renderInvestmentGoals();
   updateCategoryAutocomplete();
+
+  const mainTabBtn = document.querySelector('.tab-button[data-tab="main"]');
+  if (mainTabBtn) mainTabBtn.click();
 }
 
 function openNewYearModal() {
