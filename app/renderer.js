@@ -418,9 +418,35 @@ function initializeTabs() {
 
       button.classList.add('active');
       document.getElementById(tabName).classList.add('active');
+
+      if (button.parentElement && button.parentElement.id === 'months-nav-container') {
+        const container = button.parentElement;
+        const buttonTop = button.offsetTop - container.offsetTop;
+        container.scrollTo({
+          top: buttonTop - 48, // Centrar: Alto elemento 48, Contenedor 144 -> 144/2 - 48/2 = 48
+          behavior: 'smooth'
+        });
+      }
     });
   });
 }
+
+window.navigateMonth = function(direction) {
+  const container = document.getElementById('months-nav-container');
+  if (!container) return;
+  const monthTabs = Array.from(container.querySelectorAll('.tab-button'));
+  const activeIndex = monthTabs.findIndex(tab => tab.classList.contains('active'));
+  
+  if (activeIndex === -1) {
+    if (monthTabs.length > 0) monthTabs[0].click();
+    return;
+  }
+  
+  const nextIndex = activeIndex + direction;
+  if (nextIndex >= 0 && nextIndex < monthTabs.length) {
+    monthTabs[nextIndex].click();
+  }
+};
 
 function initializeMonthlyTabs() {
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
