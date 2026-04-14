@@ -24,7 +24,7 @@ let investmentGoals = [];
 let globalSavingsWithdrawals = [];
 let savingsChart = null;
 let cumulativeChart = null;
-let activeChartIndex = 0; // 0 = monthly savings, 1 = cumulative
+let activeChartIndex = 0; // Historically: 0 = monthly savings, 1 = cumulative (deprecated)
 let validationMessageTimeout = null;
 let customFunds = [];
 
@@ -1171,22 +1171,18 @@ function initializeSavingsChart() {
   // ── Chart 1: Monthly savings ──────────────────────────────────────────
   const ctx1 = document.getElementById('savingsChart').getContext('2d');
   savingsChart = new Chart(ctx1, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels: CHART_LABELS,
       datasets: [{
         label: 'Ahorro Mensual',
         data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        borderColor: '#6366f1',
-        backgroundColor: 'rgba(99, 102, 241, 0.05)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointBackgroundColor: '#6366f1',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        pointHoverRadius: 6
+        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+        hoverBackgroundColor: '#6366f1',
+        borderRadius: 6,
+        borderSkipped: false,
+        barPercentage: 0.6,
+        categoryPercentage: 0.8
       }]
     },
     options: {
@@ -1242,24 +1238,7 @@ function initializeSavingsChart() {
 }
 
 // Switches between chart 0 (monthly) and chart 1 (cumulative)
-async function switchChart(direction) {
-  activeChartIndex = (activeChartIndex + direction + 2) % 2;
 
-  const savingsCanvas = document.getElementById('savingsChart');
-  const cumulativeCanvas = document.getElementById('cumulativeChart');
-  const indicator = document.getElementById('chart-indicator');
-
-  if (activeChartIndex === 0) {
-    savingsCanvas.style.display = '';
-    cumulativeCanvas.style.display = 'none';
-    if (indicator) indicator.textContent = '1 / 2';
-  } else {
-    savingsCanvas.style.display = 'none';
-    cumulativeCanvas.style.display = '';
-    if (indicator) indicator.textContent = '2 / 2';
-    await updateCumulativeChart();
-  }
-}
 
 // Calculates cumulative savings per month, starting from prior-year balances
 async function updateCumulativeChart() {
@@ -1373,10 +1352,7 @@ async function updateSavingsChart() {
   savingsChart.data.datasets[0].data = savingsData;
   savingsChart.update();
 
-  // Keep cumulative chart in sync if it is currently visible
-  if (activeChartIndex === 1) {
-    await updateCumulativeChart();
-  }
+  await updateCumulativeChart();
 
   saveYearData();
 
