@@ -1,120 +1,102 @@
-# Financy
+# Financy 💎
+### Gestión Financiera Inteligente para el Mundo Real
 
-Aplicación de escritorio para gestionar movimientos financieros personales, construida con **Electron** y **better-sqlite3**.
-
----
-
-## Requisitos
-
-- **Node.js** >= 24.0.0
-- **npm** >= 10
+**Financy** es una aplicación de escritorio diseñada para gestionas tu dinero. Construida con **Electron** y **SQLite**, buscando ofrecer una experiencia fluida, visual y analítica.
 
 ---
 
-## Instalación
+## ✨ Características Principales
 
-```bash
-npm install
-```
+### 📊 Dashboard Analítico
+- **Visualización en Tiempo Real**: Gráficos dinámicos (Doughnut y Bar) que muestran la distribución de tus gastos y la evolución de tus ahorros.
+- **Navegación Intuitiva**: Sistema de navegación por meses con "cinematic scrolling" y sidebar lateral para un acceso rápido.
 
-`postinstall` ejecuta `electron-rebuild` automáticamente para compilar `better-sqlite3` con el ABI de Electron.
+### 💰 Reparto Inteligente de Ingresos
+- **Perfiles de Ahorro**: Define cómo se reparte cada euro que entra (ej. 40% Gastos, 20% Inversión, 20% Personal, 20% Ahorro).
+- **Asignación Automática**: Los ingresos se distribuyen al instante según tu perfil seleccionado, facilitando el cumplimiento de tus metas.
 
----
+### 🎯 Objetivos de Inversión (Fondos)
+- **Tracking de Metas**: Crea objetivos específicos (ej. "Entrada Piso", "Coche Nuevo") y realiza aportaciones directas.
+- **Histórico de Transacciones**: Consulta cada movimiento vinculado a tus metas de inversión.
 
-## Uso
+### 🏦 Fondos Personalizados
+- **Gestión de Cuentas**: Configura múltiples fondos o cuentas (Cuenta Principal, Fondo de Emergencia, etc.) y gestiona sus saldos de forma independiente.
 
-```bash
-# Lanzar la aplicación
-npm start
-
-# Ejecutar los tests
-npm test
-```
-
----
-
-## Estructura del proyecto
-
-```
-app/
-  database.js   # Capa de acceso a datos (independiente de Electron)
-  main.js       # Proceso principal de Electron
-  preload.js    # Puente seguro entre main y renderer
-  renderer.js   # Lógica del proceso de renderizado
-  logica.js     # Lógica de negocio
-  index.html    # Interfaz de usuario
-tests/
-  database.test.js     # Tests de escritura, lectura y borrado en BD
-  environment.test.js  # Tests de verificación del entorno de ejecución
-```
+### 📅 Multianual & Relacional
+- **Histórico Completo**: Cambia entre diferentes años fiscales sin perder el ritmo.
+- **Integridad de Datos**: Estructura relacional robusta para asegurar que cada gasto e ingreso esté donde debe estar.
 
 ---
 
-## Arquitectura
+## 🛠️ Stack Tecnológico
 
-### Capa de datos (`app/database.js`)
+- **Core**: [Electron](https://www.electronjs.org/) (Desktop App Framework)
+- **Base de Datos**: [better-sqlite3](https://github.com/WiseLibs/node-better-sqlite3) (SQLite síncrono y de alto rendimiento)
+- **Visualización**: [Chart.js](https://www.chartjs.org/) (Gráficos interactivos)
+- **Frontend**: HTML5, CSS3 (Vanilla con estética Premium) y JavaScript ES6+
 
-La lógica de acceso a la base de datos está **desacoplada de Electron**, lo que permite testearla directamente con Jest sin necesidad de levantar una ventana.
+---
 
-| Función | Descripción |
-|---|---|
-| `crearTabla(db)` | Crea la tabla `movimientos` si no existe |
-| `guardarMovimiento(db, datos)` | Inserta un nuevo movimiento `{concepto, importe, fecha}` |
-| `obtenerMovimientos(db)` | Devuelve todos los movimientos ordenados por `id DESC` |
-| `borrarMovimiento(db, id)` | Elimina el movimiento con el `id` indicado |
+## 🏗️ Arquitectura del Proyecto
 
-### Base de datos
-
-SQLite mediante `better-sqlite3`. La tabla principal:
-
-```sql
-CREATE TABLE movimientos (
-  id       INTEGER PRIMARY KEY AUTOINCREMENT,
-  concepto TEXT    NOT NULL,
-  importe  REAL    NOT NULL,
-  fecha    TEXT    NOT NULL
-)
+```text
+Financy/
+├── app/
+│   ├── database.js   # Capa de datos relacional (8 tablas)
+│   ├── main.js       # Proceso principal de Electron
+│   ├── preload.js    # Puente seguro de comunicación
+│   ├── renderer.js   # Lógica central del Dashboard (Visualización y UX)
+│   ├── index.html    # Estructura UI moderna
+│   └── styles.css    # Sistema de diseño Premium (Dark mode y animaciones)
+├── tests/            # Suite de pruebas unitarias y de entorno
+└── README.md         # Documentación oficial
 ```
 
 ---
 
-## Tests
+## 💾 Estructura de Datos (Esquema Relacional)
 
-Los tests se ejecutan **dentro del proceso de Electron** (`ELECTRON_RUN_AS_NODE=1`) para garantizar que el ABI de Node.js es idéntico al de producción y evitar conflictos con módulos nativos.
+La aplicación utiliza una base de datos SQLite con una arquitectura de 8 tablas para una gestión granular:
 
-### `tests/database.test.js` (6 tests)
-
-Cada test usa una base de datos SQLite **en memoria** creada limpia en `beforeEach` y cerrada en `afterEach`.
-
-| Bloque | Test |
-|---|---|
-| Escritura | Inserta 1 registro correctamente |
-| Escritura | Inserta N registros correctamente |
-| Lectura | Devuelve registros ordenados por `id DESC` |
-| Lectura | Devuelve array vacío si no hay datos |
-| Borrado | Borra únicamente el registro indicado |
-| Borrado | Deja la tabla vacía al borrar el único registro |
-
-### `tests/environment.test.js` (3 tests)
-
-Verifica que el entorno de tests es siempre compatible con Electron.
-
-| Test | Qué comprueba |
-|---|---|
-| ABI correcto | `process.versions.modules === 143` (Electron 40) |
-| Versión de Node.js | Major version == 24 |
-| Proceso Electron | `process.versions.electron` está definido |
-
-> Si estos tests fallan significa que Jest se está ejecutando con el Node.js del sistema en lugar del de Electron.
+| Tabla | Propósito |
+| :--- | :--- |
+| `years` | Gestión de diferentes ejercicios fiscales. |
+| `incomes` | Registro de entradas con destino directo o reparto automático. |
+| `expenses` | Gastos categorizados (Mensuales, Personales, Inversiones). |
+| `investment_goals` | Metas de ahorro a largo plazo con objetivos de importe. |
+| `goal_transactions` | Registro detallado de aportaciones a inversiones. |
+| `custom_funds` | Gestión de cuentas y fondos de depósito personalizados. |
+| `global_withdrawals` | Seguimiento de retiros de capital de los ahorros globales. |
+| `settings` | Almacenamiento persistente de configuraciones y perfiles de reparto. |
 
 ---
 
-## Dependencias
+## 🚀 Instalación y Uso
 
-| Paquete | Tipo | Uso |
-|---|---|---|
-| `better-sqlite3` | producción | Base de datos SQLite síncrona |
-| `electron` | dev | Framework de escritorio |
-| `electron-rebuild` | dev | Recompila módulos nativos para el ABI de Electron |
-| `jest` | dev | Framework de tests |
-| `cross-env` | dev | Variables de entorno multiplataforma en scripts npm |
+1. **Clonar el repositorio**:
+   ```bash
+   git clone [url-del-repo]
+   ```
+
+2. **Instalar dependencias**:
+   ```bash
+   npm install
+   ```
+   *(Nota: Se ejecutará `electron-rebuild` automáticamente para compilar el módulo nativo de SQLite).*
+
+3. **Ejecutar la aplicación**:
+   ```bash
+   npm start
+   ```
+
+4. **Ejecutar tests**:
+   ```bash
+   npm test
+   ```
+
+
+---
+
+## 📄 Licencia
+
+Este proyecto es propiedad privada. Uso bajo licencia **ISC**.
