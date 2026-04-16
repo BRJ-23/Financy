@@ -1,19 +1,20 @@
 let currentYear = new Date().getFullYear();
 let availableYears = [];
 let APP_SETTINGS = {};
-const CAT_COLORS = [
-  '#6366f1','#f59e0b','#10b981','#3b82f6','#ef4444',
-  '#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'
-];
-
 function getCategoryColor(category) {
   if (!category || category === 'Disponible') return '#f3f4f6';
+  if (category === 'Sin Categoría' || category === 'Sin nombre') return '#e5e7eb';
+
   let hash = 0;
   for (let i = 0; i < category.length; i++) {
     hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash; // Convertir a 32bit int
   }
-  const index = Math.abs(hash) % CAT_COLORS.length;
-  return CAT_COLORS[index];
+
+  // Multiplicador (137 es un número primo que ayuda a dispersar los tonos)
+  const h = Math.abs(hash * 137) % 360;
+  // Saturación 50% y Luminosidad 80% para un look pastel suave como los fondos de tipos
+  return `hsl(${h}, 50%, 80%)`;
 }
 
 function getEmptyBudgets() {
@@ -530,6 +531,7 @@ function initializeMonthlyTabs() {
                     <span class="pct-badge savings-badge" id="${month}-savings-pct">0%</span>
                   </div>
                   <span class="stat-value savings-value" id="${month}-savings-display">€0.00</span>
+                  <small class="month-progress-info" id="${month}-savings-info" style="margin-top: 5px; font-size: 9px; opacity: 0.8;">Ahorro base + sobrantes de presupuesto</small>
                 </div>
               </div>
 
@@ -582,7 +584,6 @@ function initializeMonthlyTabs() {
               </div>
 
               <!-- Savings info removed from bars list as it's now in the stats box above -->
-              <small class="month-progress-info" id="${month}-savings-info" style="margin-top: -5px; margin-bottom: 10px;">Ahorro base + sobrantes de presupuesto</small>
             </div>
           </div>
 
@@ -855,66 +856,86 @@ function updateBudgetAllocations(month) {
   budget.investments      = investments;
   budget.savings          = baseSavings;
 
-  createCategoryCharts(month);
   updateExpenseDisplay(month);
 }
 
 // Category-distribution doughnuts (one per expense type)
 function createCategoryCharts(month) {
   const budget = monthlyBudgets[month];
-  const CAT_COLORS = [
-    '#6366f1','#f59e0b','#10b981','#3b82f6','#ef4444',
-    '#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'
-  ];
 
   function buildDoughnut(canvasId, expenses, totalBudget) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
-    if (canvas.chart) { canvas.chart.destroy(); canvas.chart = null; }
 
     const catMap = {};
     expenses.forEach(e => {
       const cat = e.category || e.description || 'Sin nombre';
       catMap[cat] = (catMap[cat] || 0) + e.amount;
     });
-    const labels = Object.keys(catMap);
-    const totalSpent = labels.reduce((s, l) => s + catMap[l], 0);
-    const remaining = Math.max(0, totalBudget - totalSpent);
 
-    if (remaining > 0) {
-      catMap['Disponible'] = remaining;
-      labels.push('Disponible');
+    let labels = Object.keys(catMap);
+    if (labels.length === 0) {
+      catMap['Sin datos'] = 1;
+      labels = ['Sin datos'];
     }
 
     const data   = labels.map(l => catMap[l]);
-    const colors = labels.map(l => getCategoryColor(l));
+    const colors = labels.map(l => {
+      if (l === 'Sin datos') return '#f3f4f6';
+      return getCategoryColor(l);
+    });
 
-    canvas.chart = new Chart(canvas.getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: labels.length > 0 ? labels : ['Sin datos'],
-        datasets: [{
-          data: data.length > 0 ? data : [1],
-          backgroundColor: colors,
-          borderColor: 'white',
-          borderWidth: 2,
-          hoverOffset: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '65%',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: ctx => labels.length > 0 ? `${ctx.label}: €${ctx.parsed.toFixed(2)}` : 'Sin datos'
+    const isNoData = labels[0] === 'Sin datos';
+
+    if (canvas.chart) {
+      // Reutilizar instancia para transiciones suaves
+      canvas.chart.data.labels = labels;
+      canvas.chart.data.datasets[0].data = data;
+      canvas.chart.data.datasets[0].backgroundColor = colors;
+      canvas.chart.options.plugins.tooltip.enabled = !isNoData;
+      canvas.chart.options.plugins.tooltip.backgroundColor = '#1f2937';
+      canvas.chart.options.plugins.tooltip.titleColor = '#ffffff';
+      canvas.chart.options.plugins.tooltip.bodyColor = '#ffffff';
+      canvas.chart.update();
+    } else {
+      // Crear instancia inicial
+      canvas.chart = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors,
+            borderColor: 'rgba(0,0,0,0.05)',
+            borderWidth: 1,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: 10 },
+          cutout: '65%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: !isNoData,
+              backgroundColor: '#1f2937',
+              titleColor: '#ffffff',
+              bodyColor: '#ffffff',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              padding: 12,
+              cornerRadius: 8,
+              displayColors: true,
+              callbacks: {
+                label: ctx => ` ${ctx.label}: €${ctx.parsed.toFixed(2)}`
+              }
             }
           }
         }
-      }
-    });
+      });
+    }
   }
 
   buildDoughnut(`${month}-monthly-chart`,    budget.expenses.filter(e => e.type === 'monthly'),    budget.monthlyExpenses);
@@ -960,7 +981,8 @@ function updateExpenseDisplay(month) {
   setEl(`${month}-personal-center-text`,   `€${personalLeftover.toFixed(2)}`);
   setEl(`${month}-investment-center-text`, `€${investmentLeftover.toFixed(2)}`);
 
-  // Doughnut legends
+  // Doughnut charts & legends
+  createCategoryCharts(month);
   updateDoughnutLegends(month);
 
   // Unified transaction table
@@ -970,7 +992,6 @@ function updateExpenseDisplay(month) {
 // ─── Doughnut legends (category breakdown below each chart) ──────────────────
 function updateDoughnutLegends(month) {
   const budget = monthlyBudgets[month];
-  const COLORS = ['#6366f1','#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'];
 
   function buildLegend(legendId, expenses, totalBudget) {
     const el = document.getElementById(legendId);
@@ -981,26 +1002,14 @@ function updateDoughnutLegends(month) {
       catMap[cat] = (catMap[cat] || 0) + e.amount;
     });
 
-    const totalSpent = Object.values(catMap).reduce((s, v) => s + v, 0);
-    const remaining = Math.max(0, totalBudget - totalSpent);
-    if (remaining > 0) {
-      catMap['Disponible'] = remaining;
-    }
-
-    const entries = Object.entries(catMap).sort((a, b) => {
-      if (a[0] === 'Disponible') return 1;
-      if (b[0] === 'Disponible') return -1;
-      return b[1] - a[1];
-    });
+    const entries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
     if (entries.length === 0) {
       el.innerHTML = '<span class="legend-empty">Sin gastos</span>';
       return;
     }
     el.innerHTML = entries.map(([cat, amt]) => {
       const color = getCategoryColor(cat);
-      const isDisponible = cat === 'Disponible';
-      const badgeStyle = isDisponible ? '' : `background:${color}20; color:${color}; border-color:${color}40;`;
-      return `<div class="legend-item" style="${isDisponible ? 'opacity:0.7;' : ''}">
+      return `<div class="legend-item">
         <span class="legend-dot" style="background:${color}"></span>
         <span class="legend-label" title="${cat}">${cat}</span>
         <span class="legend-value">€${amt.toFixed(2)}</span>
@@ -1076,7 +1085,9 @@ function renderTransactionTable(month) {
     let detailHtml = row.detail;
     if (row.kind === 'monthly' || row.kind === 'personal') {
       const catColor = getCategoryColor(row.detail);
-      detailHtml = `<span class="tx-cat-badge" style="background:${catColor}15; color:${catColor}; border-color:${catColor}30;">${row.detail}</span>`;
+      // Para el texto usamos una versión más oscura del color (L: 40% en lugar de 80%)
+      const textColor = catColor.replace('80%)', '40%)');
+      detailHtml = `<span class="tx-cat-badge" style="background:${catColor}; color:${textColor}; border-color:${textColor}30;">${row.detail}</span>`;
     }
 
     return `<tr class="tx-row">
