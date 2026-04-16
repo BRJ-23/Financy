@@ -1,6 +1,20 @@
 let currentYear = new Date().getFullYear();
 let availableYears = [];
 let APP_SETTINGS = {};
+const CAT_COLORS = [
+  '#6366f1','#f59e0b','#10b981','#3b82f6','#ef4444',
+  '#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'
+];
+
+function getCategoryColor(category) {
+  if (!category || category === 'Disponible') return '#f3f4f6';
+  let hash = 0;
+  for (let i = 0; i < category.length; i++) {
+    hash = category.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % CAT_COLORS.length;
+  return CAT_COLORS[index];
+}
 
 function getEmptyBudgets() {
   return {
@@ -500,11 +514,23 @@ function initializeMonthlyTabs() {
             </div>
 
             <div class="month-progress-section">
-              <!-- Income stat -->
-              <div class="month-stat-row">
-                <span class="stat-icon">💰</span>
-                <span class="stat-label">Ingresos totales</span>
-                <span class="stat-value income-value" id="${month}-income-total">€0.00</span>
+              <!-- Income & Savings combined row -->
+              <div class="month-stats-container">
+                <div class="month-stats-box">
+                  <div class="stats-label-group">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-label">Ingresos</span>
+                  </div>
+                  <span class="stat-value income-value" id="${month}-income-total">€0.00</span>
+                </div>
+                <div class="month-stats-box">
+                  <div class="stats-label-group">
+                    <span class="stat-icon">⏳</span>
+                    <span class="stat-label">Ahorro</span>
+                    <span class="pct-badge savings-badge" id="${month}-savings-pct">0%</span>
+                  </div>
+                  <span class="stat-value savings-value" id="${month}-savings-display">€0.00</span>
+                </div>
               </div>
 
               <!-- Monthly bar -->
@@ -555,19 +581,8 @@ function initializeMonthlyTabs() {
                 <small class="month-progress-info" id="${month}-investment-info">Usado: €0 / €0</small>
               </div>
 
-              <!-- Savings total -->
-              <div class="month-savings-row">
-                <div class="savings-row-left">
-                  <span class="progress-dot savings-dot"></span>
-                  <span class="progress-cat-label">Ahorro del mes</span>
-                  <span class="pct-badge savings-badge" id="${month}-savings-pct">20%</span>
-                </div>
-                <div class="savings-row-right">
-                  <span class="savings-total-label">Total Ahorrado:</span>
-                  <span class="savings-total-value" id="${month}-savings-display">€0.00</span>
-                </div>
-              </div>
-              <small class="month-progress-info" id="${month}-savings-info">Base: €0 + Sobrantes</small>
+              <!-- Savings info removed from bars list as it's now in the stats box above -->
+              <small class="month-progress-info" id="${month}-savings-info" style="margin-top: -5px; margin-bottom: 10px;">Ahorro base + sobrantes de presupuesto</small>
             </div>
           </div>
 
@@ -608,17 +623,10 @@ function initializeMonthlyTabs() {
           <div class="month-table-scroll">
             <table class="transactions-table">
               <thead>
-                <tr>
-                  <th class="col-desc">Descripción</th>
-                  <th class="col-amount">Cantidad</th>
-                  <th class="col-type">Tipo</th>
-                  <th class="col-detail">Detalle</th>
-                  <th class="col-action"></th>
-                </tr>
-              </thead>
-              <tbody id="${month}-tx-body"></tbody>
-              <tfoot>
                 <tr class="add-tx-row">
+                  <td class="col-date">
+                    <input type="text" id="${month}-add-date-display" placeholder="Hoy" class="tx-input" disabled style="background: transparent; border: none; font-size: 11px;">
+                  </td>
                   <td class="col-desc">
                     <input type="text" id="${month}-add-desc" placeholder="Descripción..." class="tx-input">
                   </td>
@@ -639,7 +647,16 @@ function initializeMonthlyTabs() {
                     <button class="add-tx-btn" onclick="addTransaction('${month}')" title="Añadir transacción">+</button>
                   </td>
                 </tr>
-              </tfoot>
+                <tr>
+                  <th class="col-date">Fecha</th>
+                  <th class="col-desc">Descripción</th>
+                  <th class="col-amount">Cantidad</th>
+                  <th class="col-type">Tipo</th>
+                  <th class="col-detail">Detalle/Categoría</th>
+                  <th class="col-action"></th>
+                </tr>
+              </thead>
+              <tbody id="${month}-tx-body"></tbody>
             </table>
           </div>
         </div>
@@ -850,7 +867,7 @@ function createCategoryCharts(month) {
     '#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'
   ];
 
-  function buildDoughnut(canvasId, expenses) {
+  function buildDoughnut(canvasId, expenses, totalBudget) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     if (canvas.chart) { canvas.chart.destroy(); canvas.chart = null; }
@@ -861,10 +878,16 @@ function createCategoryCharts(month) {
       catMap[cat] = (catMap[cat] || 0) + e.amount;
     });
     const labels = Object.keys(catMap);
+    const totalSpent = labels.reduce((s, l) => s + catMap[l], 0);
+    const remaining = Math.max(0, totalBudget - totalSpent);
+
+    if (remaining > 0) {
+      catMap['Disponible'] = remaining;
+      labels.push('Disponible');
+    }
+
     const data   = labels.map(l => catMap[l]);
-    const colors = labels.length > 0
-      ? labels.map((_, i) => CAT_COLORS[i % CAT_COLORS.length])
-      : ['#e5e7eb'];
+    const colors = labels.map(l => getCategoryColor(l));
 
     canvas.chart = new Chart(canvas.getContext('2d'), {
       type: 'doughnut',
@@ -894,9 +917,9 @@ function createCategoryCharts(month) {
     });
   }
 
-  buildDoughnut(`${month}-monthly-chart`,    budget.expenses.filter(e => e.type === 'monthly'));
-  buildDoughnut(`${month}-personal-chart`,   budget.expenses.filter(e => e.type === 'personal'));
-  buildDoughnut(`${month}-investment-chart`, budget.expenses.filter(e => e.type === 'investment'));
+  buildDoughnut(`${month}-monthly-chart`,    budget.expenses.filter(e => e.type === 'monthly'),    budget.monthlyExpenses);
+  buildDoughnut(`${month}-personal-chart`,   budget.expenses.filter(e => e.type === 'personal'),   budget.personalExpenses);
+  buildDoughnut(`${month}-investment-chart`, budget.expenses.filter(e => e.type === 'investment'), budget.investments);
 }
 
 function updateExpenseDisplay(month) {
@@ -922,7 +945,7 @@ function updateExpenseDisplay(month) {
 
   // Progress bars
   function updateBar(fillId, remainingId, used, bgt) {
-    const pct   = bgt > 0 ? Math.min(100, (used / bgt) * 100) : 0;
+    const pct   = bgt > 0 ? Math.max(0, 100 - (used / bgt) * 100) : 0;
     const fillEl = document.getElementById(fillId);
     const remEl  = document.getElementById(remainingId);
     if (fillEl) fillEl.style.width = pct + '%';
@@ -932,10 +955,10 @@ function updateExpenseDisplay(month) {
   updateBar(`${month}-personal-fill`,   `${month}-personal-remaining`,   personalUsed,   budget.personalExpenses);
   updateBar(`${month}-investment-fill`, `${month}-investment-remaining`, investmentUsed, budget.investments);
 
-  // Doughnut center texts
-  setEl(`${month}-monthly-center-text`,    `€${monthlyUsed.toFixed(2)}`);
-  setEl(`${month}-personal-center-text`,   `€${personalUsed.toFixed(2)}`);
-  setEl(`${month}-investment-center-text`, `€${investmentUsed.toFixed(2)}`);
+  // Doughnut center texts (Now showing remaining amount)
+  setEl(`${month}-monthly-center-text`,    `€${monthlyLeftover.toFixed(2)}`);
+  setEl(`${month}-personal-center-text`,   `€${personalLeftover.toFixed(2)}`);
+  setEl(`${month}-investment-center-text`, `€${investmentLeftover.toFixed(2)}`);
 
   // Doughnut legends
   updateDoughnutLegends(month);
@@ -949,7 +972,7 @@ function updateDoughnutLegends(month) {
   const budget = monthlyBudgets[month];
   const COLORS = ['#6366f1','#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'];
 
-  function buildLegend(legendId, expenses) {
+  function buildLegend(legendId, expenses, totalBudget) {
     const el = document.getElementById(legendId);
     if (!el) return;
     const catMap = {};
@@ -957,23 +980,37 @@ function updateDoughnutLegends(month) {
       const cat = e.category || e.description || 'Sin nombre';
       catMap[cat] = (catMap[cat] || 0) + e.amount;
     });
-    const entries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+
+    const totalSpent = Object.values(catMap).reduce((s, v) => s + v, 0);
+    const remaining = Math.max(0, totalBudget - totalSpent);
+    if (remaining > 0) {
+      catMap['Disponible'] = remaining;
+    }
+
+    const entries = Object.entries(catMap).sort((a, b) => {
+      if (a[0] === 'Disponible') return 1;
+      if (b[0] === 'Disponible') return -1;
+      return b[1] - a[1];
+    });
     if (entries.length === 0) {
       el.innerHTML = '<span class="legend-empty">Sin gastos</span>';
       return;
     }
-    el.innerHTML = entries.map(([cat, amt], i) =>
-      `<div class="legend-item">
-        <span class="legend-dot" style="background:${COLORS[i % COLORS.length]}"></span>
+    el.innerHTML = entries.map(([cat, amt]) => {
+      const color = getCategoryColor(cat);
+      const isDisponible = cat === 'Disponible';
+      const badgeStyle = isDisponible ? '' : `background:${color}20; color:${color}; border-color:${color}40;`;
+      return `<div class="legend-item" style="${isDisponible ? 'opacity:0.7;' : ''}">
+        <span class="legend-dot" style="background:${color}"></span>
         <span class="legend-label" title="${cat}">${cat}</span>
         <span class="legend-value">€${amt.toFixed(2)}</span>
-      </div>`
-    ).join('');
+      </div>`;
+    }).join('');
   }
 
-  buildLegend(`${month}-monthly-legend`,    budget.expenses.filter(e => e.type === 'monthly'));
-  buildLegend(`${month}-personal-legend`,   budget.expenses.filter(e => e.type === 'personal'));
-  buildLegend(`${month}-investment-legend`, budget.expenses.filter(e => e.type === 'investment'));
+  buildLegend(`${month}-monthly-legend`,    budget.expenses.filter(e => e.type === 'monthly'),    budget.monthlyExpenses);
+  buildLegend(`${month}-personal-legend`,   budget.expenses.filter(e => e.type === 'personal'),   budget.personalExpenses);
+  buildLegend(`${month}-investment-legend`, budget.expenses.filter(e => e.type === 'investment'), budget.investments);
 }
 
 // ─── Unified transaction table ────────────────────────────────────────────────
@@ -983,25 +1020,38 @@ function renderTransactionTable(month) {
   if (!tbody) return;
 
   const TYPE_META = {
-    income:     { label: '💰 Ingreso',   cls: 'badge-income' },
-    monthly:    { label: '🏠 Mensual',   cls: 'badge-monthly' },
-    personal:   { label: '🛍️ Personal',  cls: 'badge-personal' },
-    investment: { label: '📈 Inversión', cls: 'badge-investment' }
+    income:     { label: 'Ingreso',   cls: 'badge-income' },
+    monthly:    { label: 'Mensual',   cls: 'badge-monthly' },
+    personal:   { label: 'Personal',  cls: 'badge-personal' },
+    investment: { label: 'Inversión', cls: 'badge-investment' }
   };
 
   const rows = [];
   budget.incomes.forEach((inc, idx) => {
-    rows.push({ kind: 'income', idx, description: inc.description, amount: inc.amount, detail: inc.destLabel || 'Repartido', positive: true });
+    rows.push({
+      kind: 'income', idx, description: inc.description, amount: inc.amount,
+      detail: inc.destLabel || 'Repartido', positive: true, date: inc.date || ''
+    });
   });
   budget.expenses.forEach((exp, idx) => {
     let detail = '';
     if (exp.type === 'monthly' || exp.type === 'personal') detail = exp.category || 'Sin Categoría';
     else if (exp.type === 'investment') detail = exp.description;
-    rows.push({ kind: exp.type, idx, description: exp.description, amount: exp.amount, detail, positive: false });
+    rows.push({
+      kind: exp.type, idx, description: exp.description, amount: exp.amount,
+      detail, positive: false, date: exp.date || ''
+    });
+  });
+
+  // Sort by date (descending), most recent first
+  rows.sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return new Date(b.date) - new Date(a.date);
   });
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="tx-empty">Sin transacciones todavía. Añade una en la fila de abajo ↓</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="tx-empty">Sin transacciones todavía. Añade una arriba ↑</td></tr>`;
     return;
   }
 
@@ -1012,11 +1062,29 @@ function renderTransactionTable(month) {
     const delFn = row.kind === 'income'
       ? `deleteIncomeByIndex('${month}', ${row.idx})`
       : `deleteExpenseByIndex('${month}', ${row.idx})`;
+
+    // Formatting date as DD/MM/YYYY
+    let dateStr = '-';
+    if (row.date) {
+      const d = new Date(row.date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const monthStr = String(d.getMonth() + 1).padStart(2, '0');
+      dateStr = `${day}/${monthStr}/${d.getFullYear()}`;
+    }
+
+    // Detail/Category styling as badge if expense
+    let detailHtml = row.detail;
+    if (row.kind === 'monthly' || row.kind === 'personal') {
+      const catColor = getCategoryColor(row.detail);
+      detailHtml = `<span class="tx-cat-badge" style="background:${catColor}15; color:${catColor}; border-color:${catColor}30;">${row.detail}</span>`;
+    }
+
     return `<tr class="tx-row">
+      <td class="col-date tx-date">${dateStr}</td>
       <td class="col-desc tx-desc">${row.description}</td>
       <td class="col-amount tx-amount" style="color:${color}">${sign}€${row.amount.toFixed(2)}</td>
       <td class="col-type"><span class="tx-type-badge ${meta.cls}">${meta.label}</span></td>
-      <td class="col-detail tx-detail">${row.detail}</td>
+      <td class="col-detail tx-detail">${detailHtml}</td>
       <td class="col-action"><button class="tx-delete-btn" onclick="${delFn}" title="Eliminar">✕</button></td>
     </tr>`;
   }).join('');
@@ -1077,7 +1145,8 @@ window.addTransaction = function(month) {
     }
     const budget = monthlyBudgets[month];
     const id = 'inc-' + Math.random().toString(36).substr(2, 9);
-    const incObj = { id, amount, description, dest, destLabel };
+    const date = new Date().toISOString();
+    const incObj = { id, amount, description, dest, destLabel, date };
     budget.incomes.push(incObj);
     if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month });
     budget.totalIncome = budget.incomes.reduce((s, i) => s + i.amount, 0);
@@ -1097,7 +1166,8 @@ window.addTransaction = function(month) {
     if (type === 'investment' && !contextValue) {
       showValidationMessage('Selecciona un fondo de inversión'); return;
     }
-    const expenseObj = { type, amount, description, id: 'exp-' + Math.random().toString(36).substr(2, 9) };
+    const date = new Date().toISOString();
+    const expenseObj = { type, amount, description, id: 'exp-' + Math.random().toString(36).substr(2, 9), date };
     if (type === 'monthly' || type === 'personal') {
       expenseObj.category = contextValue || 'Sin Categoría';
     }

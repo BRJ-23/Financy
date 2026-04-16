@@ -20,7 +20,8 @@ function inicializarTablas(db) {
       amount REAL,
       description TEXT,
       dest TEXT,
-      destLabel TEXT
+      destLabel TEXT,
+      date TEXT
     );
     CREATE TABLE IF NOT EXISTS expenses (
       id TEXT PRIMARY KEY,
@@ -30,7 +31,8 @@ function inicializarTablas(db) {
       amount REAL,
       description TEXT,
       category TEXT,
-      goalId TEXT
+      goalId TEXT,
+      date TEXT
     );
     CREATE TABLE IF NOT EXISTS investment_goals (
       id TEXT PRIMARY KEY,
@@ -65,6 +67,9 @@ function inicializarTablas(db) {
       value TEXT
     );
   `);
+  // Migraciones (añadir columna date si no existe)
+  try { db.exec('ALTER TABLE incomes ADD COLUMN date TEXT'); } catch (e) {}
+  try { db.exec('ALTER TABLE expenses ADD COLUMN date TEXT'); } catch (e) {}
 }
 
 // =======================
@@ -124,8 +129,8 @@ function getYearData(db, year) {
 
 function addIncome(db, inc) {
   db.prepare(
-    'INSERT INTO incomes (id, year, month, amount, description, dest, destLabel) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).run(inc.id, inc.year, inc.month, inc.amount, inc.description, inc.dest, inc.destLabel);
+    'INSERT INTO incomes (id, year, month, amount, description, dest, destLabel, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(inc.id, inc.year, inc.month, inc.amount, inc.description, inc.dest, inc.destLabel, inc.date);
 }
 
 function deleteIncome(db, id) {
@@ -134,8 +139,8 @@ function deleteIncome(db, id) {
 
 function addExpense(db, exp) {
   db.prepare(
-    'INSERT INTO expenses (id, year, month, type, amount, description, category, goalId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-  ).run(exp.id, exp.year, exp.month, exp.type, exp.amount, exp.description, exp.category, exp.goalId);
+    'INSERT INTO expenses (id, year, month, type, amount, description, category, goalId, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(exp.id, exp.year, exp.month, exp.type, exp.amount, exp.description, exp.category, exp.goalId, exp.date);
 }
 
 function deleteExpense(db, id) {
