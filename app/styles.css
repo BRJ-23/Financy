@@ -16,7 +16,7 @@ body {
 .container {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   overflow: hidden;
 }
 
@@ -35,24 +35,27 @@ h1 {
 /* Tabs Navigation */
 .tabs-nav {
   display: flex;
-  overflow-x: auto;
+  flex-direction: column;
+  width: 260px;
+  min-width: 260px;
+  overflow-y: auto;
   background: white;
-  border-top: 1px solid #e5e7eb;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
-  flex-wrap: wrap;
+  border-right: 1px solid #e5e7eb;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.02);
+  z-index: 10;
 }
 
 .tab-button {
-  flex: 1;
-  min-width: 80px;
-  padding: 10px 12px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 20px 14px 25px;
   background: white;
   border: none;
-  border-top: 3px solid transparent;
+  border-left: 4px solid transparent;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
-  transition: all 0.3s;
+  transition: all 0.2s;
   color: #4b5563;
 }
 
@@ -62,8 +65,9 @@ h1 {
 }
 
 .tab-button.active {
-  border-top-color: #2563eb;
-  color: #2563eb;
+  background-color: #eff6ff;
+  border-left-color: #2563eb;
+  color: #1d4ed8;
   font-weight: 600;
 }
 
@@ -77,6 +81,10 @@ h1 {
 
 .tab-content.active {
   display: block;
+}
+
+#ajustes.tab-content {
+  padding: 0;
 }
 
 /* Main Page Styles */
@@ -617,36 +625,20 @@ button:hover {
   transform: translateY(calc(-50% - 1px));
 }
 
-.settings-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  z-index: 1100;
-  align-items: center;
-  justify-content: center;
-}
-
-.settings-overlay.open {
+.settings-workspace-layout {
   display: flex;
-}
-
-.settings-modal {
-  background: #fff;
-  border-radius: 10px;
-  width: 100%;
-  max-width: 820px;
-  max-height: 82vh;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
-  display: flex;
+  height: 100%;
+  background: white;
+  border-radius: 12px;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 .settings-sidebar {
-  width: 220px;
-  background: #f3f4f6;
+  width: 240px;
+  background: #f9fafb;
   border-right: 1px solid #e5e7eb;
-  padding: 16px 0;
+  padding: 24px 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -692,30 +684,16 @@ button:hover {
 }
 
 .settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .settings-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   color: #111827;
-}
-
-.settings-close {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 18px;
-  color: #6b7280;
-  padding: 4px;
-  line-height: 1;
-}
-
-.settings-close:hover {
-  color: #111827;
+  font-weight: 700;
 }
 
 .settings-section-description {
@@ -888,4 +866,527 @@ button:hover {
 }
 .no-scrollbars::-webkit-scrollbar {
   display: none;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MONTHLY VIEW — New 2-zone layout
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Override tab-content display for month tabs */
+.tab-content.month-tab {
+  overflow: hidden;
+  padding: 16px;
+  display: none;
+  height: 100%;
+  box-sizing: border-box;
+}
+.tab-content.month-tab.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Root layout: two zones stacked */
+.month-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+/* ─── TOP ZONE: Summary Panel ─────────────────────────────────────────────── */
+.month-summary-panel {
+  display: flex;
+  flex: 0 0 auto;
+  max-height: 46%;
+  min-height: 260px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+/* Left side: mode selector + progress bars */
+.month-summary-left {
+  flex: 1;
+  padding: 18px 22px;
+  border-right: 1px solid #f3f4f6;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.month-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.month-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.month-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-mode-label {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.month-mode-select {
+  padding: 5px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #374151;
+  background: #f9fafb;
+  cursor: pointer;
+}
+
+.month-progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Unified stats container for Income & Savings */
+.month-stats-container {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.month-stats-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  justify-content: center;
+}
+
+.stats-label-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.stat-icon { font-size: 14px; }
+.stat-label { font-size: 11px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; }
+.stat-value { font-size: 18px; font-weight: 800; color: #111827; }
+
+.income-value { color: #10b981 !important; }
+.savings-value { color: #10b981 !important; }
+
+/* Progress bar items */
+.month-progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.month-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-label-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.progress-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.monthly-dot    { background: #ef4444; }
+.personal-dot   { background: #f59e0b; }
+.investment-dot { background: #8b5cf6; }
+.savings-dot    { background: #10b981; }
+
+.progress-cat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.pct-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 10px;
+}
+
+.monthly-badge    { background: #fee2e2; color: #dc2626; }
+.personal-badge   { background: #fef3c7; color: #d97706; }
+.investment-badge { background: #ede9fe; color: #7c3aed; }
+.savings-badge    { background: #d1fae5; color: #059669; }
+
+.progress-remaining {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.monthly-remaining    { color: #ef4444; }
+.personal-remaining   { color: #f59e0b; }
+.investment-remaining { color: #8b5cf6; }
+
+.month-progress-track {
+  height: 7px;
+  background: #f3f4f6;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.month-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.monthly-fill    { background: linear-gradient(90deg, #ef4444, #fca5a5); }
+.personal-fill   { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
+.investment-fill { background: linear-gradient(90deg, #8b5cf6, #c4b5fd); }
+
+.month-progress-info {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+/* Category Badge in Transactions Table */
+.tx-cat-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+
+/* Add row at top adjustments */
+.transactions-table thead tr.add-tx-row {
+  background-color: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* Right side: 3 doughnut cards */
+.month-summary-right {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.month-doughnut-card {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 10px 10px;
+  border-left: 1px solid #f3f4f6;
+}
+
+.doughnut-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.monthly-title    { color: #ef4444; }
+.personal-title   { color: #f59e0b; }
+.investment-title { color: #8b5cf6; }
+
+.doughnut-wrap {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.doughnut-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative;
+  z-index: 2;
+}
+
+.doughnut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  font-weight: 700;
+  color: #374151;
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.doughnut-legend {
+  margin-top: 8px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  max-height: 75px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  flex: 1;
+  color: #4b5563;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legend-value {
+  color: #111827;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.legend-empty {
+  font-size: 10px;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* ─── BOTTOM ZONE: Transactions Table ─────────────────────────────────────── */
+.month-table-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.month-table-topbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 18px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+
+.month-table-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.month-table-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.transactions-table thead {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;
+  z-index: 2;
+}
+
+.transactions-table thead th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.transactions-table .col-date   { width: 12%; text-align: center; }
+.transactions-table .col-desc   { width: 28%; }
+.transactions-table .col-amount { width: 12%; text-align: right; }
+.transactions-table .col-type   { width: 15%; text-align: center; }
+.transactions-table .col-detail { width: 25%; }
+.transactions-table .col-action { width: 8%; text-align: center; }
+
+.tx-row td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f9fafb;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.tx-row:hover td { background: #fafafa; }
+
+.tx-desc   { font-weight: 500; }
+.tx-amount { text-align: right; font-weight: 600; }
+.tx-detail { color: #6b7280; font-size: 12px; }
+
+/* Transaction type badges */
+.tx-type-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-income     { background: #d1fae5; color: #065f46; }
+.badge-monthly    { background: #fee2e2; color: #991b1b; }
+.badge-personal   { background: #fef3c7; color: #92400e; }
+.badge-investment { background: #ede9fe; color: #5b21b6; }
+
+/* Delete button in the table body */
+.tx-delete-btn {
+  background: none;
+  border: none;
+  color: #d1d5db;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.tx-delete-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+/* Empty-state row */
+.tx-empty {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 28px;
+}
+
+/* Add-transaction footer row */
+.add-tx-row {
+  position: sticky;
+  bottom: 0;
+  background: #f9fafb;
+  border-top: 2px solid #e5e7eb;
+  z-index: 2;
+}
+
+.add-tx-row td {
+  padding: 7px 8px;
+  vertical-align: middle;
+}
+
+.tx-input {
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #374151;
+  background: white;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.tx-input:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+}
+
+.tx-input.tx-amount {
+  text-align: right;
+}
+
+.tx-select {
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #374151;
+  background: white;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.tx-select:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+.add-tx-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin: 0 auto;
+}
+
+.add-tx-btn:hover {
+  background: #1d4ed8;
+  transform: scale(1.08);
 }

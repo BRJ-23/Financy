@@ -1,6 +1,21 @@
 let currentYear = new Date().getFullYear();
 let availableYears = [];
 let APP_SETTINGS = {};
+function getCategoryColor(category) {
+  if (!category || category === 'Disponible') return '#f3f4f6';
+  if (category === 'Sin Categoría' || category === 'Sin nombre') return '#e5e7eb';
+
+  let hash = 0;
+  for (let i = 0; i < category.length; i++) {
+    hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash; // Convertir a 32bit int
+  }
+
+  // Multiplicador (137 es un número primo que ayuda a dispersar los tonos)
+  const h = Math.abs(hash * 137) % 360;
+  // Saturación 50% y Luminosidad 80% para un look pastel suave como los fondos de tipos
+  return `hsl(${h}, 50%, 80%)`;
+}
 
 function getEmptyBudgets() {
   return {
@@ -24,7 +39,7 @@ let investmentGoals = [];
 let globalSavingsWithdrawals = [];
 let savingsChart = null;
 let cumulativeChart = null;
-let activeChartIndex = 0; // 0 = monthly savings, 1 = cumulative
+let activeChartIndex = 0; // Historically: 0 = monthly savings, 1 = cumulative (deprecated)
 let validationMessageTimeout = null;
 let customFunds = [];
 
@@ -139,18 +154,38 @@ function renderYearSidebar() {
   if (!list) return;
 
   const years = availableYears.sort((a, b) => b - a);
-  list.innerHTML = years.map((y, index) => {
-    const isSelected = y === currentYear;
-    const borderStyle = index < years.length - 1 ? 'border-bottom: 1px solid #e5e7eb;' : 'border-bottom: none;';
-    const bg = isSelected ? '#f3f4f6' : 'transparent';
-    const color = isSelected ? '#111827' : '#6b7280';
-    const shadow = isSelected ? 'box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);' : '';
 
+  const displayEl = document.getElementById('sidebar-year-display');
+  if (displayEl) {
+    displayEl.textContent = currentYear || 'Ninguno';
+  }
+
+  list.innerHTML = years.map(y => {
+    const isSelected = y === currentYear;
     return `
-      <div style="position: relative; width: 100%; border: none; ${borderStyle}">
-        <button onclick="selectYear(${y})" oncontextmenu="showYearMenu(event, ${y})" style="width: 100%; padding: 12px 10px; font-size: 15px; font-weight: ${isSelected ? '800' : '600'}; background: ${bg}; color: ${color}; border: none; cursor: pointer; transition: all 0.2s; text-align: left; ${shadow}" onmouseover="if(${y} !== ${currentYear}) { this.style.background='#f9fafb'; this.style.color='#374151'; }" onmouseout="if(${y} !== ${currentYear}) { this.style.background='transparent'; this.style.color='#6b7280'; }">
-          ${y}
-        </button>
+      <div class="year-card ${isSelected ? 'active' : ''}" style="
+        background: white; 
+        border-radius: 12px; 
+        padding: 24px; 
+        box-shadow: ${isSelected ? '0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05)' : '0 4px 6px -1px rgba(0, 0, 0, 0.05)'}; 
+        border: 2px solid ${isSelected ? '#3b82f6' : '#e5e7eb'}; 
+        transition: all 0.2s ease-in-out;
+        position: relative;
+        cursor: pointer;
+      " onclick="selectYear(${y})" oncontextmenu="showYearMenu(event, ${y})"
+      onmouseover="this.style.borderColor='${isSelected ? '#3b82f6' : '#9ca3af'}'; this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';"
+      onmouseout="this.style.borderColor='${isSelected ? '#3b82f6' : '#e5e7eb'}'; this.style.transform='translateY(0)'; this.style.boxShadow='${isSelected ? '0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05)' : '0 4px 6px -1px rgba(0, 0, 0, 0.05)'}';">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+           <span style="font-size: 24px; font-weight: 800; color: ${isSelected ? '#1d4ed8' : '#1f2937'};">📅 ${y}</span>
+           ${isSelected ? '<span style="font-size: 10px; font-weight: 700; background: #3b82f6; color: white; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase;">Activo</span>' : ''}
+        </div>
+        <p style="font-size: 13px; color: #6b7280; line-height: 1.5; margin: 0 0 20px 0;">Gestión financiera y seguimiento de objetivos para el periodo ${y}.</p>
+        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f3f4f6; pt: 15px; margin-top: auto; padding-top: 15px;">
+           <span style="font-size: 11px; color: #9ca3af; font-weight: 500;">Click derecho para más opciones</span>
+           <div style="width: 28px; height: 28px; border-radius: 50%; background: ${isSelected ? '#eff6ff' : '#f9fafb'}; display: flex; align-items: center; justify-content: center; color: ${isSelected ? '#3b82f6' : '#9ca3af'}; transition: all 0.2s;">
+             ${isSelected ? '✓' : '→'}
+           </div>
+        </div>
       </div>
     `;
   }).join('');
@@ -183,7 +218,12 @@ function handleCtxDeleteYear() {
 }
 
 function selectYear(year) {
-  if (currentYear === year) return;
+  if (currentYear === year) {
+    const mainTabBtn = document.querySelector('.tab-button[data-tab="main"]');
+    if (mainTabBtn) mainTabBtn.click();
+    return;
+  }
+  
   loadYearData(year);
   renderYearSidebar();
 
@@ -192,6 +232,9 @@ function selectYear(year) {
   updateSavingsChart();
   renderInvestmentGoals();
   updateCategoryAutocomplete();
+
+  const mainTabBtn = document.querySelector('.tab-button[data-tab="main"]');
+  if (mainTabBtn) mainTabBtn.click();
 }
 
 function openNewYearModal() {
@@ -418,115 +461,211 @@ function initializeTabs() {
 
       button.classList.add('active');
       document.getElementById(tabName).classList.add('active');
+
+      if (button.parentElement && button.parentElement.id === 'months-nav-container') {
+        const container = button.parentElement;
+        const buttonTop = button.offsetTop - container.offsetTop;
+        container.scrollTo({
+          top: buttonTop - 48, // Centrar: Alto elemento 48, Contenedor 144 -> 144/2 - 48/2 = 48
+          behavior: 'smooth'
+        });
+      }
     });
   });
 }
+
+window.navigateMonth = function(direction) {
+  const container = document.getElementById('months-nav-container');
+  if (!container) return;
+  const monthTabs = Array.from(container.querySelectorAll('.tab-button'));
+  const activeIndex = monthTabs.findIndex(tab => tab.classList.contains('active'));
+  
+  if (activeIndex === -1) {
+    if (monthTabs.length > 0) monthTabs[0].click();
+    return;
+  }
+  
+  const nextIndex = activeIndex + direction;
+  if (nextIndex >= 0 && nextIndex < monthTabs.length) {
+    monthTabs[nextIndex].click();
+  }
+};
 
 function initializeMonthlyTabs() {
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
     'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
   months.forEach(month => {
+    const monthLabel = month.charAt(0).toUpperCase() + month.slice(1);
     const tabContent = document.getElementById(month);
+    tabContent.classList.add('month-tab');
     tabContent.innerHTML = `
-      <h2>${month.charAt(0).toUpperCase() + month.slice(1)}</h2>
-      
-      <div id="${month}-categories">
-        <div class="categories-grid">
-          <!-- Income Column -->
-          <div class="category-card income">
-            <h3>Ingresos</h3>
-            <div class="amount" id="${month}-income-total">€0</div>
-            <div class="input-section" style="padding: 10px 0; margin: 0;">
-              <div class="input-group" style="flex-direction: column; gap: 8px;">
-                <label for="${month}-income-mode" style="font-size: 12px; color: #6b7280;">Modo de Reparto</label>
-                <select id="${month}-income-mode" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
-                </select>
-                <select id="${month}-income-dest" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; margin-bottom: 4px;">
-                  <option value="reparto">Repartir (según Modo)</option>
-                  <option value="monthly">Directo a Gastos Mensuales</option>
-                  <option value="personal">Directo a Gastos Personales</option>
-                  <option value="investment">Directo a Inversiones</option>
-                  <option value="savings">Directo a Ahorro</option>
-                </select>
-                <input type="text" id="${month}-income-description" placeholder="Descripción (ej: Salario)" style="min-width: auto;">
-                <input type="number" id="${month}-income-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
-                <button onclick="addIncome('${month}')" style="margin: 0;">Añadir Ingreso</button>
+      <div class="month-layout">
+        <!-- ═══ TOP: Summary Panel ═══════════════════════════════════ -->
+        <div class="month-summary-panel">
+
+          <!-- Left: mode selector + progress bars -->
+          <div class="month-summary-left">
+            <div class="month-summary-header">
+              <h2 class="month-title">${monthLabel}</h2>
+              <div class="month-mode-row">
+                <label for="${month}-income-mode" class="month-mode-label">Modo de reparto</label>
+                <select id="${month}-income-mode" class="month-mode-select"></select>
               </div>
             </div>
-            <div class="expenses-list" id="${month}-income-list"></div>
-          </div>
-          
-          <div class="category-card expense">
-            <h3>Gastos Mensuales (<span id="${month}-monthly-pct">40</span>%)</h3>
-            <div class="amount" id="${month}-monthly-display">€0</div>
-            <div style="height: 150px; width: 100%; position: relative;">
-              <canvas id="${month}-monthly-chart"></canvas>
-              <div id="${month}-monthly-center-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold; color: #374151; pointer-events: none;">€0.00</div>
-            </div>
-            <small id="${month}-monthly-info" style="color: #6b7280;">Usado: €0 / €0</small>
-            <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
-              <div class="input-group" style="flex-direction: column; gap: 8px;">
-                <input type="text" id="${month}-monthly-description" placeholder="Descripción" style="min-width: auto;">
-                <input type="text" id="${month}-monthly-category" list="category-autocomplete-list" placeholder="Categoría (ej. Combustible)" style="min-width: auto;">
-                <input type="number" id="${month}-monthly-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
-                <button onclick="addExpense('${month}', 'monthly')" style="margin: 0;">Añadir Gasto</button>
+
+            <div class="month-progress-section">
+              <!-- Income & Savings combined row -->
+              <div class="month-stats-container">
+                <div class="month-stats-box">
+                  <div class="stats-label-group">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-label">Ingresos</span>
+                  </div>
+                  <span class="stat-value income-value" id="${month}-income-total">€0.00</span>
+                </div>
+                <div class="month-stats-box">
+                  <div class="stats-label-group">
+                    <span class="stat-icon">⏳</span>
+                    <span class="stat-label">Ahorro</span>
+                    <span class="pct-badge savings-badge" id="${month}-savings-pct">0%</span>
+                  </div>
+                  <span class="stat-value savings-value" id="${month}-savings-display">€0.00</span>
+                  <small class="month-progress-info" id="${month}-savings-info" style="margin-top: 5px; font-size: 9px; opacity: 0.8;">Ahorro base + sobrantes de presupuesto</small>
+                </div>
               </div>
-            </div>
-            <div class="expenses-list" id="${month}-monthly-list"></div>
-            <div id="${month}-monthly-category-summary" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
-          </div>
-          
-          <div class="category-card personal">
-            <h3>Gastos Personales (<span id="${month}-personal-pct">20</span>%)</h3>
-            <div class="amount" id="${month}-personal-display">€0</div>
-            <div style="height: 150px; width: 100%; position: relative;">
-              <canvas id="${month}-personal-chart"></canvas>
-              <div id="${month}-personal-center-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold; color: #374151; pointer-events: none;">€0.00</div>
-            </div>
-            <small id="${month}-personal-info" style="color: #6b7280;">Usado: €0 / €0</small>
-            <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
-              <div class="input-group" style="flex-direction: column; gap: 8px;">
-                <input type="text" id="${month}-personal-description" placeholder="Descripción" style="min-width: auto;">
-                <input type="text" id="${month}-personal-category" list="category-autocomplete-list" placeholder="Categoría (ej. Ropa, Ocio)" style="min-width: auto;">
-                <input type="number" id="${month}-personal-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
-                <button onclick="addExpense('${month}', 'personal')" style="margin: 0;">Añadir Gasto</button>
+
+              <!-- Monthly bar -->
+              <div class="month-progress-item">
+                <div class="month-progress-header">
+                  <div class="progress-label-group">
+                    <span class="progress-dot monthly-dot"></span>
+                    <span class="progress-cat-label">Gastos Mensuales</span>
+                    <span class="pct-badge monthly-badge" id="${month}-monthly-pct">40%</span>
+                  </div>
+                  <span class="progress-remaining monthly-remaining" id="${month}-monthly-remaining">€0.00 disp.</span>
+                </div>
+                <div class="month-progress-track">
+                  <div class="month-progress-fill monthly-fill" id="${month}-monthly-fill" style="width:0%"></div>
+                </div>
+                <small class="month-progress-info" id="${month}-monthly-info">Usado: €0 / €0</small>
               </div>
-            </div>
-            <div class="expenses-list" id="${month}-personal-list"></div>
-            <div id="${month}-personal-category-summary" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
-          </div>
-          
-          <div class="category-card investment">
-            <h3>Inversiones (<span id="${month}-investment-pct">20</span>%)</h3>
-            <div class="amount" id="${month}-investment-display">€0</div>
-            <div style="height: 150px; width: 100%; position: relative;">
-              <canvas id="${month}-investment-chart"></canvas>
-              <div id="${month}-investment-center-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold; color: #374151; pointer-events: none;">€0.00</div>
-            </div>
-            <small id="${month}-investment-info" style="color: #6b7280;">Usado: €0 / €0</small>
-            <div class="input-section" style="padding: 10px 0; margin-top: 15px;">
-              <div class="input-group" style="flex-direction: column; gap: 8px;">
-                <select id="${month}-investment-description" style="min-width: auto; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                  <option value="">Selecciona un fondo...</option>
-                </select>
-                <input type="number" id="${month}-investment-amount" placeholder="Cantidad (€)" step="0.01" min="0" style="min-width: auto;">
-                <button onclick="addExpense('${month}', 'investment')" style="margin: 0;">Añadir Gasto</button>
+
+              <!-- Personal bar -->
+              <div class="month-progress-item">
+                <div class="month-progress-header">
+                  <div class="progress-label-group">
+                    <span class="progress-dot personal-dot"></span>
+                    <span class="progress-cat-label">Gastos Personales</span>
+                    <span class="pct-badge personal-badge" id="${month}-personal-pct">20%</span>
+                  </div>
+                  <span class="progress-remaining personal-remaining" id="${month}-personal-remaining">€0.00 disp.</span>
+                </div>
+                <div class="month-progress-track">
+                  <div class="month-progress-fill personal-fill" id="${month}-personal-fill" style="width:0%"></div>
+                </div>
+                <small class="month-progress-info" id="${month}-personal-info">Usado: €0 / €0</small>
               </div>
+
+              <!-- Investment bar -->
+              <div class="month-progress-item">
+                <div class="month-progress-header">
+                  <div class="progress-label-group">
+                    <span class="progress-dot investment-dot"></span>
+                    <span class="progress-cat-label">Inversiones</span>
+                    <span class="pct-badge investment-badge" id="${month}-investment-pct">20%</span>
+                  </div>
+                  <span class="progress-remaining investment-remaining" id="${month}-investment-remaining">€0.00 disp.</span>
+                </div>
+                <div class="month-progress-track">
+                  <div class="month-progress-fill investment-fill" id="${month}-investment-fill" style="width:0%"></div>
+                </div>
+                <small class="month-progress-info" id="${month}-investment-info">Usado: €0 / €0</small>
+              </div>
+
+              <!-- Savings info removed from bars list as it's now in the stats box above -->
             </div>
-            <div class="expenses-list" id="${month}-investment-list"></div>
           </div>
-          
-          <div class="category-card savings">
-            <h3>Ahorro Total (<span id="${month}-savings-pct">20</span>%)</h3>
-            <div class="amount" id="${month}-savings-display">€0</div>
-            <small id="${month}-savings-info" style="color: #6b7280;">Base: €0 + Sobrantes</small>
+
+          <!-- Right: Doughnut charts -->
+          <div class="month-summary-right">
+            <div class="month-doughnut-card">
+              <div class="doughnut-card-title monthly-title">🏠 Mensuales</div>
+              <div class="doughnut-wrap">
+                <canvas id="${month}-monthly-chart"></canvas>
+                <div id="${month}-monthly-center-text" class="doughnut-center">€0</div>
+              </div>
+              <div id="${month}-monthly-legend" class="doughnut-legend"></div>
+            </div>
+            <div class="month-doughnut-card">
+              <div class="doughnut-card-title personal-title">🛍️ Personales</div>
+              <div class="doughnut-wrap">
+                <canvas id="${month}-personal-chart"></canvas>
+                <div id="${month}-personal-center-text" class="doughnut-center">€0</div>
+              </div>
+              <div id="${month}-personal-legend" class="doughnut-legend"></div>
+            </div>
+            <div class="month-doughnut-card">
+              <div class="doughnut-card-title investment-title">📈 Inversiones</div>
+              <div class="doughnut-wrap">
+                <canvas id="${month}-investment-chart"></canvas>
+                <div id="${month}-investment-center-text" class="doughnut-center">€0</div>
+              </div>
+              <div id="${month}-investment-legend" class="doughnut-legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ BOTTOM: Transactions Table ══════════════════════════ -->
+        <div class="month-table-panel">
+          <div class="month-table-topbar">
+            <h3 class="month-table-title">Transacciones</h3>
+          </div>
+          <div class="month-table-scroll">
+            <table class="transactions-table">
+              <thead>
+                <tr class="add-tx-row">
+                  <td class="col-date">
+                    <input type="text" id="${month}-add-date-display" placeholder="Hoy" class="tx-input" disabled style="background: transparent; border: none; font-size: 11px;">
+                  </td>
+                  <td class="col-desc">
+                    <input type="text" id="${month}-add-desc" placeholder="Descripción..." class="tx-input">
+                  </td>
+                  <td class="col-amount">
+                    <input type="number" id="${month}-add-amount" placeholder="€0.00" step="0.01" min="0" class="tx-input tx-amount">
+                  </td>
+                  <td class="col-type">
+                    <select id="${month}-add-type" class="tx-select" onchange="onAddTypeChange('${month}')">
+                      <option value="">Tipo...</option>
+                      <option value="income">💰 Ingreso</option>
+                      <option value="monthly">🏠 Gasto Mensual</option>
+                      <option value="personal">🛍️ Gasto Personal</option>
+                      <option value="investment">📈 Inversión</option>
+                    </select>
+                  </td>
+                  <td class="col-detail" id="${month}-add-context-cell"></td>
+                  <td class="col-action">
+                    <button class="add-tx-btn" onclick="addTransaction('${month}')" title="Añadir transacción">+</button>
+                  </td>
+                </tr>
+                <tr>
+                  <th class="col-date">Fecha</th>
+                  <th class="col-desc">Descripción</th>
+                  <th class="col-amount">Cantidad</th>
+                  <th class="col-type">Tipo</th>
+                  <th class="col-detail">Detalle/Categoría</th>
+                  <th class="col-action"></th>
+                </tr>
+              </thead>
+              <tbody id="${month}-tx-body"></tbody>
+            </table>
           </div>
         </div>
       </div>
     `;
   });
 }
+
 
 function addIncome(month) {
   const amountInput = document.getElementById(`${month}-income-amount`);
@@ -666,42 +805,13 @@ function addExpense(month, type) {
 
 function updateIncomeDisplay(month) {
   const budget = monthlyBudgets[month];
-
-  document.getElementById(`${month}-income-total`).textContent = `€${budget.totalIncome.toFixed(2)}`;
-  const incomeList = document.getElementById(`${month}-income-list`);
-  incomeList.innerHTML = '';
-
-  budget.incomes.forEach((income, index) => {
-    let tagHtml = '';
-    if (income.dest && income.dest !== 'reparto') {
-      const colors = {
-        'monthly': '#ef4444',
-        'personal': '#f59e0b',
-        'investment': '#8b5cf6',
-        'savings': '#10b981'
-      };
-      const shortLabel = {
-        'monthly': 'Mensuales',
-        'personal': 'Personales',
-        'investment': 'Inversiones',
-        'savings': 'Ahorro'
-      }[income.dest];
-      tagHtml = `<span style="font-size: 10px; background: ${colors[income.dest]}20; color: ${colors[income.dest]}; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">➔ ${shortLabel}</span>`;
-    } else {
-      tagHtml = `<span style="font-size: 10px; background: #f3f4f6; color: #4b5563; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Repartido</span>`;
-    }
-
-    incomeList.innerHTML += `
-      <div class="expense-item">
-        <div>
-          <div class="label">${income.description}${tagHtml}</div>
-        </div>
-        <div class="value" style="color: #10b981;">+€${income.amount.toFixed(2)}</div>
-        <button class="delete-item-btn" onclick="deleteIncome('${month}', ${index})">✕</button>
-      </div>
-    `;
-  });
+  const incomeEl = document.getElementById(`${month}-income-total`);
+  if (incomeEl) incomeEl.textContent = `€${budget.totalIncome.toFixed(2)}`;
+  renderTransactionTable(month);
 }
+
+
+
 
 function updateBudgetAllocations(month) {
   const budget = monthlyBudgets[month];
@@ -710,10 +820,10 @@ function updateBudgetAllocations(month) {
     .filter(i => !i.dest || i.dest === 'reparto')
     .reduce((sum, inc) => sum + inc.amount, 0);
 
-  const directMonthly = budget.incomes.filter(i => i.dest === 'monthly').reduce((sum, inc) => sum + inc.amount, 0);
-  const directPersonal = budget.incomes.filter(i => i.dest === 'personal').reduce((sum, inc) => sum + inc.amount, 0);
-  const directInvestment = budget.incomes.filter(i => i.dest === 'investment').reduce((sum, inc) => sum + inc.amount, 0);
-  const directSavings = budget.incomes.filter(i => i.dest === 'savings').reduce((sum, inc) => sum + inc.amount, 0);
+  const directMonthly    = budget.incomes.filter(i => i.dest === 'monthly').reduce((s, inc) => s + inc.amount, 0);
+  const directPersonal   = budget.incomes.filter(i => i.dest === 'personal').reduce((s, inc) => s + inc.amount, 0);
+  const directInvestment = budget.incomes.filter(i => i.dest === 'investment').reduce((s, inc) => s + inc.amount, 0);
+  const directSavings    = budget.incomes.filter(i => i.dest === 'savings').reduce((s, inc) => s + inc.amount, 0);
 
   // Update total internal property to ensure chart uses it correctly
   budget.totalIncome = distributableIncome + directMonthly + directPersonal + directInvestment + directSavings;
@@ -724,286 +834,394 @@ function updateBudgetAllocations(month) {
     showValidationMessage(`El perfil "${mode.name || 'sin nombre'}" no suma 100%`);
   }
 
-  const monthlyPct = (Number(mode.allocations?.monthly) || 0) / 100;
-  const personalPct = (Number(mode.allocations?.personal) || 0) / 100;
-  const investPct = (Number(mode.allocations?.investment) || 0) / 100;
-  const savingsPct = (Number(mode.allocations?.savings) || 0) / 100;
+  const monthlyPct  = (Number(mode.allocations?.monthly)    || 0) / 100;
+  const personalPct = (Number(mode.allocations?.personal)   || 0) / 100;
+  const investPct   = (Number(mode.allocations?.investment) || 0) / 100;
+  const savingsPct  = (Number(mode.allocations?.savings)    || 0) / 100;
 
-  const monthlyPctEl = document.getElementById(`${month}-monthly-pct`);
-  const personalPctEl = document.getElementById(`${month}-personal-pct`);
-  const investmentPctEl = document.getElementById(`${month}-investment-pct`);
-  const savingsPctEl = document.getElementById(`${month}-savings-pct`);
-  if (monthlyPctEl) monthlyPctEl.textContent = String(Number(mode.allocations?.monthly) || 0);
-  if (personalPctEl) personalPctEl.textContent = String(Number(mode.allocations?.personal) || 0);
-  if (investmentPctEl) investmentPctEl.textContent = String(Number(mode.allocations?.investment) || 0);
-  if (savingsPctEl) savingsPctEl.textContent = String(Number(mode.allocations?.savings) || 0);
+  // Update pct badges (now display "XX%" in badge elements)
+  const setEl = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  setEl(`${month}-monthly-pct`,    (Number(mode.allocations?.monthly)    || 0) + '%');
+  setEl(`${month}-personal-pct`,   (Number(mode.allocations?.personal)   || 0) + '%');
+  setEl(`${month}-investment-pct`, (Number(mode.allocations?.investment) || 0) + '%');
+  setEl(`${month}-savings-pct`,    (Number(mode.allocations?.savings)    || 0) + '%');
 
-  const monthlyExpenses = (distributableIncome * monthlyPct) + directMonthly;
+  const monthlyExpenses  = (distributableIncome * monthlyPct) + directMonthly;
   const personalExpenses = (distributableIncome * personalPct) + directPersonal;
-  const investments = (distributableIncome * investPct) + directInvestment;
-  const baseSavings = (distributableIncome * savingsPct) + directSavings;
+  const investments      = (distributableIncome * investPct) + directInvestment;
+  const baseSavings      = (distributableIncome * savingsPct) + directSavings;
 
-  budget.monthlyExpenses = monthlyExpenses;
+  budget.monthlyExpenses  = monthlyExpenses;
   budget.personalExpenses = personalExpenses;
-  budget.investments = investments;
-  budget.savings = baseSavings;
+  budget.investments      = investments;
+  budget.savings          = baseSavings;
 
-  document.getElementById(`${month}-monthly-display`).textContent = `€${monthlyExpenses.toFixed(2)}`;
-  document.getElementById(`${month}-personal-display`).textContent = `€${personalExpenses.toFixed(2)}`;
-  document.getElementById(`${month}-investment-display`).textContent = `€${investments.toFixed(2)}`;
-  document.getElementById(`${month}-savings-display`).textContent = `€${baseSavings.toFixed(2)}`;
-
-  createCategoryCharts(month);
   updateExpenseDisplay(month);
 }
 
+// Category-distribution doughnuts (one per expense type)
 function createCategoryCharts(month) {
   const budget = monthlyBudgets[month];
 
-  const chartIds = [
-    `${month}-monthly-chart`,
-    `${month}-personal-chart`,
-    `${month}-investment-chart`
-  ];
+  function buildDoughnut(canvasId, expenses, totalBudget) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
 
-  chartIds.forEach(chartId => {
-    const canvasElement = document.getElementById(chartId);
-    if (canvasElement && canvasElement.chart) {
-      canvasElement.chart.destroy();
-    }
-  });
+    const catMap = {};
+    expenses.forEach(e => {
+      const cat = e.category || e.description || 'Sin nombre';
+      catMap[cat] = (catMap[cat] || 0) + e.amount;
+    });
 
-  const monthlyCtx = document.getElementById(`${month}-monthly-chart`).getContext('2d');
-  document.getElementById(`${month}-monthly-chart`).chart = new Chart(monthlyCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Disponible', 'Usado'],
-      datasets: [{
-        data: [budget.monthlyExpenses, 0],
-        backgroundColor: ['#ef4444', '#fee2e2'],
-        borderColor: ['#dc2626', '#fecaca'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      }
+    let labels = Object.keys(catMap);
+    if (labels.length === 0) {
+      catMap['Sin datos'] = 1;
+      labels = ['Sin datos'];
     }
-  });
 
-  const personalCtx = document.getElementById(`${month}-personal-chart`).getContext('2d');
-  document.getElementById(`${month}-personal-chart`).chart = new Chart(personalCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Disponible', 'Usado'],
-      datasets: [{
-        data: [budget.personalExpenses, 0],
-        backgroundColor: ['#f59e0b', '#fef3c7'],
-        borderColor: ['#d97706', '#fde68a'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      }
-    }
-  });
+    const data   = labels.map(l => catMap[l]);
+    const colors = labels.map(l => {
+      if (l === 'Sin datos') return '#f3f4f6';
+      return getCategoryColor(l);
+    });
 
-  const investmentCtx = document.getElementById(`${month}-investment-chart`).getContext('2d');
-  document.getElementById(`${month}-investment-chart`).chart = new Chart(investmentCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Disponible', 'Usado'],
-      datasets: [{
-        data: [budget.investments, 0],
-        backgroundColor: ['#8b5cf6', '#ede9fe'],
-        borderColor: ['#7c3aed', '#ddd6fe'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      }
+    const isNoData = labels[0] === 'Sin datos';
+
+    if (canvas.chart) {
+      // Reutilizar instancia para transiciones suaves
+      canvas.chart.data.labels = labels;
+      canvas.chart.data.datasets[0].data = data;
+      canvas.chart.data.datasets[0].backgroundColor = colors;
+      canvas.chart.options.plugins.tooltip.enabled = !isNoData;
+      canvas.chart.options.plugins.tooltip.backgroundColor = '#1f2937';
+      canvas.chart.options.plugins.tooltip.titleColor = '#ffffff';
+      canvas.chart.options.plugins.tooltip.bodyColor = '#ffffff';
+      canvas.chart.update();
+    } else {
+      // Crear instancia inicial
+      canvas.chart = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors,
+            borderColor: 'rgba(0,0,0,0.05)',
+            borderWidth: 1,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: 10 },
+          cutout: '65%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: !isNoData,
+              backgroundColor: '#1f2937',
+              titleColor: '#ffffff',
+              bodyColor: '#ffffff',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              padding: 12,
+              cornerRadius: 8,
+              displayColors: true,
+              callbacks: {
+                label: ctx => ` ${ctx.label}: €${ctx.parsed.toFixed(2)}`
+              }
+            }
+          }
+        }
+      });
     }
-  });
+  }
+
+  buildDoughnut(`${month}-monthly-chart`,    budget.expenses.filter(e => e.type === 'monthly'),    budget.monthlyExpenses);
+  buildDoughnut(`${month}-personal-chart`,   budget.expenses.filter(e => e.type === 'personal'),   budget.personalExpenses);
+  buildDoughnut(`${month}-investment-chart`, budget.expenses.filter(e => e.type === 'investment'), budget.investments);
 }
 
 function updateExpenseDisplay(month) {
   const budget = monthlyBudgets[month];
 
-  const monthlyUsed = budget.expenses.filter(e => e.type === 'monthly').reduce((sum, e) => sum + e.amount, 0);
-  const personalUsed = budget.expenses.filter(e => e.type === 'personal').reduce((sum, e) => sum + e.amount, 0);
-  const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((sum, e) => sum + e.amount, 0);
+  const monthlyUsed    = budget.expenses.filter(e => e.type === 'monthly').reduce((s, e) => s + e.amount, 0);
+  const personalUsed   = budget.expenses.filter(e => e.type === 'personal').reduce((s, e) => s + e.amount, 0);
+  const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((s, e) => s + e.amount, 0);
 
-  const monthlyLeftover = budget.monthlyExpenses - monthlyUsed;
-  const personalLeftover = budget.personalExpenses - personalUsed;
-  const investmentLeftover = budget.investments - investmentUsed;
-
+  const monthlyLeftover    = Math.max(0, budget.monthlyExpenses - monthlyUsed);
+  const personalLeftover   = Math.max(0, budget.personalExpenses - personalUsed);
+  const investmentLeftover = Math.max(0, budget.investments - investmentUsed);
   const totalSavings = budget.savings + monthlyLeftover + personalLeftover + investmentLeftover;
 
-  document.getElementById(`${month}-monthly-info`).textContent = `Usado: €${monthlyUsed.toFixed(2)} / €${budget.monthlyExpenses.toFixed(2)}`;
-  document.getElementById(`${month}-personal-info`).textContent = `Usado: €${personalUsed.toFixed(2)} / €${budget.personalExpenses.toFixed(2)}`;
-  document.getElementById(`${month}-investment-info`).textContent = `Usado: €${investmentUsed.toFixed(2)} / €${budget.investments.toFixed(2)}`;
-  document.getElementById(`${month}-savings-info`).textContent = `Base: €${budget.savings.toFixed(2)} + Sobrantes: €${(monthlyLeftover + personalLeftover + investmentLeftover).toFixed(2)}`;
+  const setEl = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
 
-  document.getElementById(`${month}-savings-display`).textContent = `€${totalSavings.toFixed(2)}`;
+  // Info texts
+  setEl(`${month}-monthly-info`,    `Usado: €${monthlyUsed.toFixed(2)} / €${budget.monthlyExpenses.toFixed(2)}`);
+  setEl(`${month}-personal-info`,   `Usado: €${personalUsed.toFixed(2)} / €${budget.personalExpenses.toFixed(2)}`);
+  setEl(`${month}-investment-info`, `Usado: €${investmentUsed.toFixed(2)} / €${budget.investments.toFixed(2)}`);
+  setEl(`${month}-savings-info`,    `Base: €${budget.savings.toFixed(2)} + Sobrantes: €${(monthlyLeftover + personalLeftover + investmentLeftover).toFixed(2)}`);
+  setEl(`${month}-savings-display`, `€${totalSavings.toFixed(2)}`);
 
-  const monthlyChart = document.getElementById(`${month}-monthly-chart`).chart;
-  const personalChart = document.getElementById(`${month}-personal-chart`).chart;
-  const investmentChart = document.getElementById(`${month}-investment-chart`).chart;
-
-  if (monthlyChart) {
-    monthlyChart.data.datasets[0].data = [monthlyLeftover, monthlyUsed];
-    monthlyChart.update();
-    const monthlyCenterText = document.getElementById(`${month}-monthly-center-text`);
-    if (monthlyCenterText) monthlyCenterText.textContent = `€${monthlyLeftover.toFixed(2)}`;
+  // Progress bars
+  function updateBar(fillId, remainingId, used, bgt) {
+    const pct   = bgt > 0 ? Math.max(0, 100 - (used / bgt) * 100) : 0;
+    const fillEl = document.getElementById(fillId);
+    const remEl  = document.getElementById(remainingId);
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (remEl)  remEl.textContent  = `€${Math.max(0, bgt - used).toFixed(2)} disp.`;
   }
+  updateBar(`${month}-monthly-fill`,    `${month}-monthly-remaining`,    monthlyUsed,    budget.monthlyExpenses);
+  updateBar(`${month}-personal-fill`,   `${month}-personal-remaining`,   personalUsed,   budget.personalExpenses);
+  updateBar(`${month}-investment-fill`, `${month}-investment-remaining`, investmentUsed, budget.investments);
 
-  if (personalChart) {
-    personalChart.data.datasets[0].data = [personalLeftover, personalUsed];
-    personalChart.update();
-    const personalCenterText = document.getElementById(`${month}-personal-center-text`);
-    if (personalCenterText) personalCenterText.textContent = `€${personalLeftover.toFixed(2)}`;
-  }
+  // Doughnut center texts (Now showing remaining amount)
+  setEl(`${month}-monthly-center-text`,    `€${monthlyLeftover.toFixed(2)}`);
+  setEl(`${month}-personal-center-text`,   `€${personalLeftover.toFixed(2)}`);
+  setEl(`${month}-investment-center-text`, `€${investmentLeftover.toFixed(2)}`);
 
-  if (investmentChart) {
-    investmentChart.data.datasets[0].data = [investmentLeftover, investmentUsed];
-    investmentChart.update();
-    const investmentCenterText = document.getElementById(`${month}-investment-center-text`);
-    if (investmentCenterText) investmentCenterText.textContent = `€${investmentLeftover.toFixed(2)}`;
-  }
+  // Doughnut charts & legends
+  createCategoryCharts(month);
+  updateDoughnutLegends(month);
 
-  const monthlyExpensesList = document.getElementById(`${month}-monthly-list`);
-  monthlyExpensesList.innerHTML = '';
-
-  const monthlyExpenses = budget.expenses.map((e, i) => ({ ...e, globalIndex: i })).filter(e => e.type === 'monthly');
-  monthlyExpenses.forEach((expense) => {
-    let categoryTag = '';
-    if (expense.category) {
-      categoryTag = `<span style="font-size: 10px; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">${expense.category}</span>`;
-    }
-    monthlyExpensesList.innerHTML += `
-      <div class="expense-item">
-        <div>
-          <div class="label">${expense.description}${categoryTag}</div>
-        </div>
-        <div class="value">-€${expense.amount.toFixed(2)}</div>
-        <button class="delete-item-btn" onclick="deleteExpense('${month}', ${expense.globalIndex})">✕</button>
-      </div>
-    `;
-  });
-
-  // Calculate and render category summary for monthly expenses
-  const categorySummaryContainer = document.getElementById(`${month}-monthly-category-summary`);
-  if (categorySummaryContainer) {
-    const categoryTotals = {};
-    monthlyExpenses.forEach(exp => {
-      const cat = exp.category || 'Sin Categoría';
-      categoryTotals[cat] = (categoryTotals[cat] || 0) + exp.amount;
-    });
-
-    const categoriesHtml = Object.keys(categoryTotals).sort((a, b) => categoryTotals[b] - categoryTotals[a]).map(cat => {
-      const amt = categoryTotals[cat];
-      const pct = monthlyUsed > 0 ? ((amt / monthlyUsed) * 100).toFixed(0) : 0;
-      return `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #6b7280; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 13px;">
-          <strong style="color: #374151;">${cat}</strong>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="color: #6b7280; font-size: 11px;">${pct}%</span>
-            <span style="color: #ef4444; font-weight: 600;">€${amt.toFixed(2)}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    if (Object.keys(categoryTotals).length > 0) {
-      categorySummaryContainer.innerHTML = `
-        <div style="font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px; border-top: 1px solid #e5e7eb; padding-top: 15px;">Resumen por Categorías</div>
-        ${categoriesHtml}
-      `;
-    } else {
-      categorySummaryContainer.innerHTML = '';
-    }
-  }
-
-  const personalExpensesList = document.getElementById(`${month}-personal-list`);
-  personalExpensesList.innerHTML = '';
-
-  const personalExpenses = budget.expenses.map((e, i) => ({ ...e, globalIndex: i })).filter(e => e.type === 'personal');
-  personalExpenses.forEach((expense) => {
-    let categoryTag = '';
-    if (expense.category) {
-      categoryTag = `<span style="font-size: 10px; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">${expense.category}</span>`;
-    }
-    personalExpensesList.innerHTML += `
-      <div class="expense-item">
-        <div>
-          <div class="label">${expense.description}${categoryTag}</div>
-        </div>
-        <div class="value">-€${expense.amount.toFixed(2)}</div>
-        <button class="delete-item-btn" onclick="deleteExpense('${month}', ${expense.globalIndex})">✕</button>
-      </div>
-    `;
-  });
-
-  // Calculate and render category summary for personal expenses
-  const personalCategorySummaryContainer = document.getElementById(`${month}-personal-category-summary`);
-  if (personalCategorySummaryContainer) {
-    const categoryTotals = {};
-    personalExpenses.forEach(exp => {
-      const cat = exp.category || 'Sin Categoría';
-      categoryTotals[cat] = (categoryTotals[cat] || 0) + exp.amount;
-    });
-
-    const categoriesHtml = Object.keys(categoryTotals).sort((a, b) => categoryTotals[b] - categoryTotals[a]).map(cat => {
-      const amt = categoryTotals[cat];
-      const pct = personalUsed > 0 ? ((amt / personalUsed) * 100).toFixed(0) : 0;
-      return `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #6b7280; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 13px;">
-          <strong style="color: #374151;">${cat}</strong>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="color: #6b7280; font-size: 11px;">${pct}%</span>
-            <span style="color: #ef4444; font-weight: 600;">€${amt.toFixed(2)}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    if (Object.keys(categoryTotals).length > 0) {
-      personalCategorySummaryContainer.innerHTML = `
-        <div style="font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px; border-top: 1px solid #e5e7eb; padding-top: 15px;">Resumen por Categorías</div>
-        ${categoriesHtml}
-      `;
-    } else {
-      personalCategorySummaryContainer.innerHTML = '';
-    }
-  }
-
-  const investmentExpensesList = document.getElementById(`${month}-investment-list`);
-  investmentExpensesList.innerHTML = '';
-
-  const investmentExpenses = budget.expenses.map((e, i) => ({ ...e, globalIndex: i })).filter(e => e.type === 'investment');
-  investmentExpenses.forEach((expense) => {
-    investmentExpensesList.innerHTML += `
-      <div class="expense-item">
-        <div>
-          <div class="label">${expense.description}</div>
-        </div>
-        <div class="value">-€${expense.amount.toFixed(2)}</div>
-        <button class="delete-item-btn" onclick="deleteExpense('${month}', ${expense.globalIndex})">✕</button>
-      </div>
-    `;
-  });
+  // Unified transaction table
+  renderTransactionTable(month);
 }
+
+// ─── Doughnut legends (category breakdown below each chart) ──────────────────
+function updateDoughnutLegends(month) {
+  const budget = monthlyBudgets[month];
+
+  function buildLegend(legendId, expenses, totalBudget) {
+    const el = document.getElementById(legendId);
+    if (!el) return;
+    const catMap = {};
+    expenses.forEach(e => {
+      const cat = e.category || e.description || 'Sin nombre';
+      catMap[cat] = (catMap[cat] || 0) + e.amount;
+    });
+
+    const entries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+    if (entries.length === 0) {
+      el.innerHTML = '<span class="legend-empty">Sin gastos</span>';
+      return;
+    }
+    el.innerHTML = entries.map(([cat, amt]) => {
+      const color = getCategoryColor(cat);
+      return `<div class="legend-item">
+        <span class="legend-dot" style="background:${color}"></span>
+        <span class="legend-label" title="${cat}">${cat}</span>
+        <span class="legend-value">€${amt.toFixed(2)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  buildLegend(`${month}-monthly-legend`,    budget.expenses.filter(e => e.type === 'monthly'),    budget.monthlyExpenses);
+  buildLegend(`${month}-personal-legend`,   budget.expenses.filter(e => e.type === 'personal'),   budget.personalExpenses);
+  buildLegend(`${month}-investment-legend`, budget.expenses.filter(e => e.type === 'investment'), budget.investments);
+}
+
+// ─── Unified transaction table ────────────────────────────────────────────────
+function renderTransactionTable(month) {
+  const budget = monthlyBudgets[month];
+  const tbody  = document.getElementById(`${month}-tx-body`);
+  if (!tbody) return;
+
+  const TYPE_META = {
+    income:     { label: 'Ingreso',   cls: 'badge-income' },
+    monthly:    { label: 'Mensual',   cls: 'badge-monthly' },
+    personal:   { label: 'Personal',  cls: 'badge-personal' },
+    investment: { label: 'Inversión', cls: 'badge-investment' }
+  };
+
+  const rows = [];
+  budget.incomes.forEach((inc, idx) => {
+    rows.push({
+      kind: 'income', idx, description: inc.description, amount: inc.amount,
+      detail: inc.destLabel || 'Repartido', positive: true, date: inc.date || ''
+    });
+  });
+  budget.expenses.forEach((exp, idx) => {
+    let detail = '';
+    if (exp.type === 'monthly' || exp.type === 'personal') detail = exp.category || 'Sin Categoría';
+    else if (exp.type === 'investment') detail = exp.description;
+    rows.push({
+      kind: exp.type, idx, description: exp.description, amount: exp.amount,
+      detail, positive: false, date: exp.date || ''
+    });
+  });
+
+  // Sort by date (descending), most recent first
+  rows.sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="tx-empty">Sin transacciones todavía. Añade una arriba ↑</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(row => {
+    const meta  = TYPE_META[row.kind] || { label: row.kind, cls: '' };
+    const color = row.positive ? '#10b981' : '#ef4444';
+    const sign  = row.positive ? '+' : '-';
+    const delFn = row.kind === 'income'
+      ? `deleteIncomeByIndex('${month}', ${row.idx})`
+      : `deleteExpenseByIndex('${month}', ${row.idx})`;
+
+    // Formatting date as DD/MM/YYYY
+    let dateStr = '-';
+    if (row.date) {
+      const d = new Date(row.date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const monthStr = String(d.getMonth() + 1).padStart(2, '0');
+      dateStr = `${day}/${monthStr}/${d.getFullYear()}`;
+    }
+
+    // Detail/Category styling as badge if expense
+    let detailHtml = row.detail;
+    if (row.kind === 'monthly' || row.kind === 'personal') {
+      const catColor = getCategoryColor(row.detail);
+      // Para el texto usamos una versión más oscura del color (L: 40% en lugar de 80%)
+      const textColor = catColor.replace('80%)', '40%)');
+      detailHtml = `<span class="tx-cat-badge" style="background:${catColor}; color:${textColor}; border-color:${textColor}30;">${row.detail}</span>`;
+    }
+
+    return `<tr class="tx-row">
+      <td class="col-date tx-date">${dateStr}</td>
+      <td class="col-desc tx-desc">${row.description}</td>
+      <td class="col-amount tx-amount" style="color:${color}">${sign}€${row.amount.toFixed(2)}</td>
+      <td class="col-type"><span class="tx-type-badge ${meta.cls}">${meta.label}</span></td>
+      <td class="col-detail tx-detail">${detailHtml}</td>
+      <td class="col-action"><button class="tx-delete-btn" onclick="${delFn}" title="Eliminar">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Context field for add-transaction row ────────────────────────────────────
+window.onAddTypeChange = function(month) {
+  const typeSelect  = document.getElementById(`${month}-add-type`);
+  const contextCell = document.getElementById(`${month}-add-context-cell`);
+  if (!typeSelect || !contextCell) return;
+  const type = typeSelect.value;
+
+  if (type === 'income') {
+    contextCell.innerHTML = `
+      <select id="${month}-add-context" class="tx-select">
+        <option value="reparto">Repartir (según Modo)</option>
+        <option value="monthly">→ Gastos Mensuales</option>
+        <option value="personal">→ Gastos Personales</option>
+        <option value="investment">→ Inversiones</option>
+        <option value="savings">→ Ahorro</option>
+      </select>`;
+  } else if (type === 'monthly' || type === 'personal') {
+    contextCell.innerHTML = `<input type="text" id="${month}-add-context" list="category-autocomplete-list" placeholder="Categoría (opcional)..." class="tx-input">`;
+  } else if (type === 'investment') {
+    const opts = investmentGoals.length > 0
+      ? investmentGoals.map(g => `<option value="${g.id}">${g.name}</option>`).join('')
+      : '<option value="">Sin fondos disponibles</option>';
+    contextCell.innerHTML = `
+      <select id="${month}-add-context" class="tx-select">
+        <option value="">Selecciona fondo...</option>
+        ${opts}
+      </select>`;
+  } else {
+    contextCell.innerHTML = '';
+  }
+};
+
+// ─── Unified add transaction ──────────────────────────────────────────────────
+window.addTransaction = function(month) {
+  const typeSelect  = document.getElementById(`${month}-add-type`);
+  const descInput   = document.getElementById(`${month}-add-desc`);
+  const amountInput = document.getElementById(`${month}-add-amount`);
+  const contextEl   = document.getElementById(`${month}-add-context`);
+  const type        = typeSelect  ? typeSelect.value        : '';
+  const description = descInput   ? descInput.value.trim()  : '';
+  const amount      = parseFloat(amountInput ? amountInput.value : '') || 0;
+  const contextValue = contextEl  ? contextEl.value         : '';
+
+  if (!type)        { showValidationMessage('Selecciona un tipo de transacción'); return; }
+  if (!description) { showValidationMessage('Introduce una descripción');         return; }
+  if (amount <= 0)  { showValidationMessage('Introduce una cantidad válida');     return; }
+
+  if (type === 'income') {
+    const dest = contextValue || 'reparto';
+    let destLabel = 'Repartido';
+    if (contextEl && contextEl.tagName === 'SELECT' && contextEl.selectedIndex >= 0) {
+      destLabel = contextEl.options[contextEl.selectedIndex].text;
+    }
+    const budget = monthlyBudgets[month];
+    const id = 'inc-' + Math.random().toString(36).substr(2, 9);
+    const date = new Date().toISOString();
+    const incObj = { id, amount, description, dest, destLabel, date };
+    budget.incomes.push(incObj);
+    if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month });
+    budget.totalIncome = budget.incomes.reduce((s, i) => s + i.amount, 0);
+    updateIncomeDisplay(month);
+    updateBudgetAllocations(month);
+    updateSavingsChart();
+  } else {
+    const budget = monthlyBudgets[month];
+    const budgetLimit = type === 'monthly'  ? budget.monthlyExpenses
+                      : type === 'personal' ? budget.personalExpenses
+                      : budget.investments;
+    const currentUsed = budget.expenses.filter(e => e.type === type).reduce((s, e) => s + e.amount, 0);
+    if (currentUsed + amount > budgetLimit) {
+      showValidationMessage(`Excede presupuesto. Disponible: €${Math.max(0, budgetLimit - currentUsed).toFixed(2)}`);
+      return;
+    }
+    if (type === 'investment' && !contextValue) {
+      showValidationMessage('Selecciona un fondo de inversión'); return;
+    }
+    const date = new Date().toISOString();
+    const expenseObj = { type, amount, description, id: 'exp-' + Math.random().toString(36).substr(2, 9), date };
+    if (type === 'monthly' || type === 'personal') {
+      expenseObj.category = contextValue || 'Sin Categoría';
+    }
+    if (type === 'investment') {
+      expenseObj.goalId = contextValue;
+      const goal = investmentGoals.find(g => g.id === contextValue);
+      if (goal) {
+        if (!goal.transactions) goal.transactions = [];
+        const tx = { id: expenseObj.id, amount, description: `Aportación desde ${month}`, date: new Date().toISOString(), isLinkedExpense: true };
+        goal.transactions.push(tx);
+        goal.currentAmount += amount;
+        if (window.api) {
+          window.api.addGoalTransaction({ ...tx, goalId: goal.id });
+          window.api.updateGoal({ ...goal, year: currentYear });
+        }
+        renderInvestmentGoals();
+      }
+    }
+    budget.expenses.push(expenseObj);
+    if (window.api) window.api.addExpense({ ...expenseObj, year: currentYear, month });
+    updateExpenseDisplay(month);
+    updateSavingsChart();
+    updateCategoryAutocomplete();
+  }
+
+  // Reset form
+  if (descInput)   descInput.value = '';
+  if (amountInput) amountInput.value = '';
+  if (typeSelect)  typeSelect.value = '';
+  const ctx = document.getElementById(`${month}-add-context-cell`);
+  if (ctx) ctx.innerHTML = '';
+};
+
+// ─── Delete helpers (by index, used from transaction table) ──────────────────
+window.deleteIncomeByIndex = function(month, index) {
+  deleteIncome(month, index);
+};
+
+window.deleteExpenseByIndex = function(month, index) {
+  deleteExpense(month, index);
+};
+
+
 
 function deleteIncome(month, index) {
   const budget = monthlyBudgets[month];
@@ -1117,22 +1335,18 @@ function initializeSavingsChart() {
   // ── Chart 1: Monthly savings ──────────────────────────────────────────
   const ctx1 = document.getElementById('savingsChart').getContext('2d');
   savingsChart = new Chart(ctx1, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels: CHART_LABELS,
       datasets: [{
         label: 'Ahorro Mensual',
         data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        borderColor: '#6366f1',
-        backgroundColor: 'rgba(99, 102, 241, 0.05)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointBackgroundColor: '#6366f1',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        pointHoverRadius: 6
+        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+        hoverBackgroundColor: '#6366f1',
+        borderRadius: 6,
+        borderSkipped: false,
+        barPercentage: 0.6,
+        categoryPercentage: 0.8
       }]
     },
     options: {
@@ -1188,24 +1402,7 @@ function initializeSavingsChart() {
 }
 
 // Switches between chart 0 (monthly) and chart 1 (cumulative)
-async function switchChart(direction) {
-  activeChartIndex = (activeChartIndex + direction + 2) % 2;
 
-  const savingsCanvas = document.getElementById('savingsChart');
-  const cumulativeCanvas = document.getElementById('cumulativeChart');
-  const indicator = document.getElementById('chart-indicator');
-
-  if (activeChartIndex === 0) {
-    savingsCanvas.style.display = '';
-    cumulativeCanvas.style.display = 'none';
-    if (indicator) indicator.textContent = '1 / 2';
-  } else {
-    savingsCanvas.style.display = 'none';
-    cumulativeCanvas.style.display = '';
-    if (indicator) indicator.textContent = '2 / 2';
-    await updateCumulativeChart();
-  }
-}
 
 // Calculates cumulative savings per month, starting from prior-year balances
 async function updateCumulativeChart() {
@@ -1319,10 +1516,7 @@ async function updateSavingsChart() {
   savingsChart.data.datasets[0].data = savingsData;
   savingsChart.update();
 
-  // Keep cumulative chart in sync if it is currently visible
-  if (activeChartIndex === 1) {
-    await updateCumulativeChart();
-  }
+  await updateCumulativeChart();
 
   saveYearData();
 
@@ -1787,9 +1981,6 @@ function updateInvestmentSelects() {
 }
 
 async function initializeSettingsUI() {
-  const overlay = document.getElementById('settings-overlay');
-  const openButton = document.getElementById('open-settings-button');
-  const closeButton = document.getElementById('close-settings-button');
   const navButtons = document.querySelectorAll('.settings-nav-button');
   const sections = {
     general: document.getElementById('settings-section-general'),
@@ -1798,27 +1989,8 @@ async function initializeSettingsUI() {
   };
   const title = document.getElementById('settings-title');
 
-  if (!overlay || !closeButton || !title) return;
+  if (!sections.general || !title) return;
 
-  function openSettings() {
-    overlay.classList.add('open');
-    overlay.setAttribute('aria-hidden', 'false');
-  }
-
-  function closeSettings() {
-    overlay.classList.remove('open');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
-
-  // Expose globally so the HTML onclick attribute can call them directly
-  window.openSettingsPanel = openSettings;
-  window.closeSettingsPanel = closeSettings;
-
-  if (openButton) openButton.addEventListener('click', openSettings);
-  closeButton.addEventListener('click', closeSettings);
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) closeSettings();
-  });
 
   navButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
