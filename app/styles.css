@@ -889,7 +889,7 @@ button:hover {
 .month-layout {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 12px;
   min-height: 0;
 }
@@ -897,9 +897,9 @@ button:hover {
 /* ─── TOP ZONE: Summary Panel ─────────────────────────────────────────────── */
 .month-summary-panel {
   display: flex;
-  flex: 0 0 auto;
-  max-height: 46%;
-  min-height: 260px;
+  flex-direction: column;
+  flex: 35%;
+  max-width: 35%;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
@@ -910,7 +910,7 @@ button:hover {
 .month-summary-left {
   flex: 1;
   padding: 18px 22px;
-  border-right: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1102,7 +1102,7 @@ button:hover {
 
 .month-doughnut-card {
   flex: 1;
-  min-width: 180px;
+  min-width: 140px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1123,8 +1123,8 @@ button:hover {
 
 .doughnut-wrap {
   position: relative;
-  width: 160px;
-  height: 160px;
+  width: 130px;
+  height: 130px;
   flex-shrink: 0;
 }
 
@@ -1196,7 +1196,8 @@ button:hover {
 
 /* ─── BOTTOM ZONE: Transactions Table ─────────────────────────────────────── */
 .month-table-panel {
-  flex: 1;
+  flex: 65;
+  max-width: 65%;
   display: flex;
   flex-direction: column;
   background: white;
@@ -1231,6 +1232,7 @@ button:hover {
 
 .transactions-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -1253,18 +1255,21 @@ button:hover {
   border-bottom: 1px solid #e5e7eb;
 }
 
-.transactions-table .col-date   { width: 12%; text-align: center; }
-.transactions-table .col-desc   { width: 28%; }
-.transactions-table .col-amount { width: 12%; text-align: right; }
-.transactions-table .col-type   { width: 15%; text-align: center; }
-.transactions-table .col-detail { width: 25%; }
-.transactions-table .col-action { width: 8%; text-align: center; }
+.transactions-table .col-date   { width: 11%; text-align: center; }
+.transactions-table .col-desc   { width: 34%; }
+.transactions-table .col-amount { width: 15%; text-align: right; }
+.transactions-table .col-type   { width: 14%; text-align: center; }
+.transactions-table .col-detail { width: 20%; }
+.transactions-table .col-action { width: 6%; text-align: center; }
 
 .tx-row td {
   padding: 9px 12px;
   border-bottom: 1px solid #f9fafb;
   color: #374151;
   vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tx-row:hover td { background: #fafafa; }
@@ -1325,13 +1330,16 @@ button:hover {
 }
 
 .add-tx-row td {
-  padding: 7px 8px;
+  padding: 5px 6px;
   vertical-align: middle;
+  overflow: hidden;
 }
 
 .tx-input {
-  width: 100%;
-  padding: 6px 9px;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 30px;
+  padding: 0 8px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   font-size: 12px;
@@ -1352,8 +1360,10 @@ button:hover {
 }
 
 .tx-select {
-  width: 100%;
-  padding: 6px 9px;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 30px;
+  padding: 0 6px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   font-size: 12px;
