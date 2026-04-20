@@ -501,10 +501,56 @@ function initializeMonthlyTabs() {
     tabContent.classList.add('month-tab');
     tabContent.innerHTML = `
       <div class="month-layout">
-        <!-- ═══ TOP: Summary Panel ═══════════════════════════════════ -->
+        <!-- ═══ LEFT: Transactions Table ══════════════════════════ -->
+        <div class="month-table-panel">
+          <div class="month-table-topbar">
+            <h3 class="month-table-title">Transacciones</h3>
+          </div>
+          <div class="month-table-scroll">
+            <table class="transactions-table">
+              <thead>
+                <tr class="add-tx-row">
+                  <td class="col-date">
+                    <input type="text" id="${month}-add-date-display" placeholder="Hoy" class="tx-input" disabled style="background: transparent; border: none; font-size: 11px;">
+                  </td>
+                  <td class="col-desc">
+                    <input type="text" id="${month}-add-desc" placeholder="Descripción..." class="tx-input">
+                  </td>
+                  <td class="col-amount">
+                    <input type="number" id="${month}-add-amount" placeholder="€0.00" step="0.01" min="0" class="tx-input tx-amount">
+                  </td>
+                  <td class="col-type">
+                    <select id="${month}-add-type" class="tx-select" onchange="onAddTypeChange('${month}')">
+                      <option value="">Tipo...</option>
+                      <option value="income">💰 Ingreso</option>
+                      <option value="monthly">🏠 Gasto Mensual</option>
+                      <option value="personal">🛍️ Gasto Personal</option>
+                      <option value="investment">📈 Inversión</option>
+                    </select>
+                  </td>
+                  <td class="col-detail" id="${month}-add-context-cell"></td>
+                  <td class="col-action">
+                    <button class="add-tx-btn" onclick="addTransaction('${month}')" title="Añadir transacción">+</button>
+                  </td>
+                </tr>
+                <tr>
+                  <th class="col-date">Fecha</th>
+                  <th class="col-desc">Descripción</th>
+                  <th class="col-amount">Cantidad</th>
+                  <th class="col-type">Tipo</th>
+                  <th class="col-detail">Detalle/Categoría</th>
+                  <th class="col-action"></th>
+                </tr>
+              </thead>
+              <tbody id="${month}-tx-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ═══ RIGHT: Summary Panel ═══════════════════════════════════ -->
         <div class="month-summary-panel">
 
-          <!-- Left: mode selector + progress bars -->
+          <!-- Top: mode selector + progress bars -->
           <div class="month-summary-left">
             <div class="month-summary-header">
               <h2 class="month-title">${monthLabel}</h2>
@@ -582,12 +628,10 @@ function initializeMonthlyTabs() {
                 </div>
                 <small class="month-progress-info" id="${month}-investment-info">Usado: €0 / €0</small>
               </div>
-
-              <!-- Savings info removed from bars list as it's now in the stats box above -->
             </div>
           </div>
 
-          <!-- Right: Doughnut charts -->
+          <!-- Bottom: Doughnut charts -->
           <div class="month-summary-right">
             <div class="month-doughnut-card">
               <div class="doughnut-card-title monthly-title">🏠 Mensuales</div>
@@ -613,52 +657,6 @@ function initializeMonthlyTabs() {
               </div>
               <div id="${month}-investment-legend" class="doughnut-legend"></div>
             </div>
-          </div>
-        </div>
-
-        <!-- ═══ BOTTOM: Transactions Table ══════════════════════════ -->
-        <div class="month-table-panel">
-          <div class="month-table-topbar">
-            <h3 class="month-table-title">Transacciones</h3>
-          </div>
-          <div class="month-table-scroll">
-            <table class="transactions-table">
-              <thead>
-                <tr class="add-tx-row">
-                  <td class="col-date">
-                    <input type="text" id="${month}-add-date-display" placeholder="Hoy" class="tx-input" disabled style="background: transparent; border: none; font-size: 11px;">
-                  </td>
-                  <td class="col-desc">
-                    <input type="text" id="${month}-add-desc" placeholder="Descripción..." class="tx-input">
-                  </td>
-                  <td class="col-amount">
-                    <input type="number" id="${month}-add-amount" placeholder="€0.00" step="0.01" min="0" class="tx-input tx-amount">
-                  </td>
-                  <td class="col-type">
-                    <select id="${month}-add-type" class="tx-select" onchange="onAddTypeChange('${month}')">
-                      <option value="">Tipo...</option>
-                      <option value="income">💰 Ingreso</option>
-                      <option value="monthly">🏠 Gasto Mensual</option>
-                      <option value="personal">🛍️ Gasto Personal</option>
-                      <option value="investment">📈 Inversión</option>
-                    </select>
-                  </td>
-                  <td class="col-detail" id="${month}-add-context-cell"></td>
-                  <td class="col-action">
-                    <button class="add-tx-btn" onclick="addTransaction('${month}')" title="Añadir transacción">+</button>
-                  </td>
-                </tr>
-                <tr>
-                  <th class="col-date">Fecha</th>
-                  <th class="col-desc">Descripción</th>
-                  <th class="col-amount">Cantidad</th>
-                  <th class="col-type">Tipo</th>
-                  <th class="col-detail">Detalle/Categoría</th>
-                  <th class="col-action"></th>
-                </tr>
-              </thead>
-              <tbody id="${month}-tx-body"></tbody>
-            </table>
           </div>
         </div>
       </div>
