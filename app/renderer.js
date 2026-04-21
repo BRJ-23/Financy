@@ -137,12 +137,12 @@ async function loadYearData(year) {
 
   // Reassemble monthlyBudgets naturally from relational format
   for (const inc of raw.incomes) {
-    monthlyBudgets[inc.month].incomes.push({ id: inc.id, amount: inc.amount, description: inc.description, dest: inc.dest, destLabel: inc.destLabel });
+    monthlyBudgets[inc.month].incomes.push({ id: inc.id, amount: inc.amount, description: inc.description, dest: inc.dest, destLabel: inc.destLabel, date: inc.date });
     monthlyBudgets[inc.month].totalIncome += inc.amount;
   }
 
   for (const exp of raw.expenses) {
-    monthlyBudgets[exp.month].expenses.push({ id: exp.id, type: exp.type, amount: exp.amount, description: exp.description, category: exp.category, goalId: exp.goalId });
+    monthlyBudgets[exp.month].expenses.push({ id: exp.id, type: exp.type, amount: exp.amount, description: exp.description, category: exp.category, goalId: exp.goalId, date: exp.date });
   }
 
   investmentGoals = raw.investmentGoals || [];

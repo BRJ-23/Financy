@@ -1255,8 +1255,8 @@ button:hover {
   border-bottom: 1px solid #e5e7eb;
 }
 
-.transactions-table .col-date   { width: 11%; text-align: center; }
-.transactions-table .col-desc   { width: 34%; }
+.transactions-table .col-date   { width: 15%; text-align: center; }
+.transactions-table .col-desc   { width: 30%; }
 .transactions-table .col-amount { width: 15%; text-align: right; }
 .transactions-table .col-type   { width: 14%; text-align: center; }
 .transactions-table .col-detail { width: 20%; }
