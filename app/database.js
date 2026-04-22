@@ -55,6 +55,13 @@ function inicializarTablas(db) {
       amount REAL,
       isDefault INTEGER
     );
+    CREATE TABLE IF NOT EXISTS fund_transactions (
+      id TEXT PRIMARY KEY,
+      fundId TEXT,
+      amount REAL,
+      description TEXT,
+      date TEXT
+    );
     CREATE TABLE IF NOT EXISTS global_withdrawals (
       id TEXT PRIMARY KEY,
       year INTEGER,
@@ -196,8 +203,23 @@ function addGlobalWithdrawal(db, w) {
 
 function getCustomFunds(db) {
   const funds = db.prepare('SELECT * FROM custom_funds').all();
-  funds.forEach(f => (f.isDefault = f.isDefault === 1));
+  funds.forEach(f => {
+    f.isDefault = f.isDefault === 1;
+    f.transactions = db.prepare(
+      'SELECT * FROM fund_transactions WHERE fundId = ? ORDER BY date DESC'
+    ).all(f.id);
+  });
   return funds;
+}
+
+function addFundTransaction(db, t) {
+  db.prepare(
+    'INSERT INTO fund_transactions (id, fundId, amount, description, date) VALUES (?, ?, ?, ?, ?)'
+  ).run(t.id, t.fundId, t.amount, t.description, t.date);
+}
+
+function deleteFundTransaction(db, id) {
+  db.prepare('DELETE FROM fund_transactions WHERE id = ?').run(id);
 }
 
 function addCustomFund(db, fund) {
@@ -268,6 +290,8 @@ module.exports = {
   addCustomFund,
   updateCustomFund,
   deleteCustomFund,
+  addFundTransaction,
+  deleteFundTransaction,
   // settings
   getSettings,
   saveSetting,

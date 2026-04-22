@@ -65,6 +65,8 @@ ipcMain.handle('get-custom-funds',   ()          => dbManager.getCustomFunds(db)
 ipcMain.handle('add-custom-fund',    (e, fund)   => dbManager.addCustomFund(db, fund));
 ipcMain.handle('update-custom-fund', (e, fund)   => dbManager.updateCustomFund(db, fund));
 ipcMain.handle('delete-custom-fund', (e, id)     => dbManager.deleteCustomFund(db, id));
+ipcMain.handle('add-fund-transaction',    (e, t)  => dbManager.addFundTransaction(db, t));
+ipcMain.handle('delete-fund-transaction', (e, id) => dbManager.deleteFundTransaction(db, id));
 
 // --- SETTINGS ---
 ipcMain.handle('get-settings',  ()             => dbManager.getSettings(db));

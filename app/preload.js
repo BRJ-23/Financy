@@ -27,6 +27,8 @@ contextBridge.exposeInMainWorld('api', {
   addCustomFund: (fund) => ipcRenderer.invoke('add-custom-fund', fund),
   updateCustomFund: (fund) => ipcRenderer.invoke('update-custom-fund', fund),
   deleteCustomFund: (id) => ipcRenderer.invoke('delete-custom-fund', id),
+  addFundTransaction: (t) => ipcRenderer.invoke('add-fund-transaction', t),
+  deleteFundTransaction: (id) => ipcRenderer.invoke('delete-fund-transaction', id),
 
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSetting: (key, value) => ipcRenderer.invoke('save-setting', key, value)

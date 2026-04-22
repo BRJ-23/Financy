@@ -1070,13 +1070,13 @@ function renderTransactionTable(month) {
       ? `deleteIncomeByIndex('${month}', ${row.idx})`
       : `deleteExpenseByIndex('${month}', ${row.idx})`;
 
-    // Formatting date as DD/MM/YYYY
+    // Formatting date as DD/MM
     let dateStr = '-';
     if (row.date) {
       const d = new Date(row.date);
       const day = String(d.getDate()).padStart(2, '0');
       const monthStr = String(d.getMonth() + 1).padStart(2, '0');
-      dateStr = `${day}/${monthStr}/${d.getFullYear()}`;
+      dateStr = `${day}/${monthStr}`;
     }
 
     // Detail/Category styling as badge if expense
@@ -1631,6 +1631,29 @@ function renderCustomFunds(appSavings = 0) {
       displayAmount += appSavings;
     }
 
+    let transactionsHtml = '';
+    if (fund.transactions && fund.transactions.length > 0) {
+      const sortedT = [...fund.transactions].reverse();
+      transactionsHtml = sortedT.map(t => {
+        const isPos = t.amount >= 0;
+        let dateStr = '-';
+        if (t.date) {
+          const d = new Date(t.date);
+          const day = String(d.getDate()).padStart(2, '0');
+          const monthStr = String(d.getMonth() + 1).padStart(2, '0');
+          dateStr = `${day}/${monthStr}`;
+        }
+        return `
+          <div class="goal-transaction-item">
+            <div class="date">${dateStr}</div>
+            <div class="desc" title="${t.description}">${t.description}</div>
+            <div class="amt ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}</div>
+            <button class="delete-item-btn" onclick="deleteTransactionFromFund('${fund.id}', '${t.id}')" title="Eliminar">✕</button>
+          </div>
+        `;
+      }).join('');
+    }
+
     return `
       <div class="custom-fund-card ${fund.isDefault ? 'is-default' : ''}">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
@@ -1652,9 +1675,17 @@ function renderCustomFunds(appSavings = 0) {
         <div style="font-size: 20px; font-weight: bold; color: ${fund.isDefault ? '#10b981' : '#111827'}; margin-top: 5px; margin-bottom: 8px;">
           €${displayAmount.toFixed(2)}
         </div>
-        <div class="month-progress-track" style="height: 4px; margin-top: auto; background: #f3f4f6;">
+        <div class="month-progress-track" style="height: 4px; margin-bottom: 12px; background: #f3f4f6;">
           <div class="month-progress-fill savings-fill" style="width: 100%;"></div>
         </div>
+        
+        <div class="goal-add-funds">
+          <input type="text" id="fund-tx-desc-${fund.id}" placeholder="Descripción" style="flex: 2;">
+          <input type="number" id="fund-tx-amt-${fund.id}" placeholder="€" step="0.01" style="flex: 1;">
+          <button onclick="addTransactionToFund('${fund.id}')" title="Añadir">+</button>
+        </div>
+        
+        ${transactionsHtml ? `<div class="goal-transactions" style="margin-top: 10px;">${transactionsHtml}</div>` : ''}
       </div>
     `;
   }).join('');
@@ -1917,8 +1948,18 @@ function renderInvestmentGoals() {
       transationsHtml = sortedT.map(t => {
         const isPos = t.amount >= 0;
         const canDelete = !t.isLinkedExpense;
+        
+        let dateStr = '-';
+        if (t.date) {
+          const d = new Date(t.date);
+          const day = String(d.getDate()).padStart(2, '0');
+          const monthStr = String(d.getMonth() + 1).padStart(2, '0');
+          dateStr = `${day}/${monthStr}`;
+        }
+
         return `
           <div class="goal-transaction-item">
+            <div class="date">${dateStr}</div>
             <div class="desc" title="${t.description}">${t.description}</div>
             <div class="amt ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}</div>
             ${canDelete ? `<button class="delete-item-btn" onclick="deleteTransaction('${goal.id}', '${t.id}')" title="Eliminar movimiento">✕</button>` : ''}
@@ -2235,6 +2276,59 @@ window.selectYear = selectYear;
 window.showYearMenu = showYearMenu;
 window.handleCtxEditYear = handleCtxEditYear;
 window.handleCtxDeleteYear = handleCtxDeleteYear;
+window.addTransactionToFund = addTransactionToFund;
+window.deleteTransactionFromFund = deleteTransactionFromFund;
+
+async function addTransactionToFund(fundId) {
+  const descInput = document.getElementById(`fund-tx-desc-${fundId}`);
+  const amtInput = document.getElementById(`fund-tx-amt-${fundId}`);
+  const description = descInput ? descInput.value.trim() : '';
+  const amount = parseFloat(amtInput ? amtInput.value : '') || 0;
+
+  if (amount === 0) {
+    showValidationMessage('Introduce una cantidad válida'); return;
+  }
+  if (!description) {
+    showValidationMessage('Introduce una descripción'); return;
+  }
+
+  const fund = customFunds.find(f => f.id === fundId);
+  if (fund) {
+    const tx = {
+      id: 'ftx-' + Date.now(),
+      fundId,
+      amount,
+      description,
+      date: new Date().toISOString()
+    };
+    if (!fund.transactions) fund.transactions = [];
+    fund.transactions.push(tx);
+    fund.amount += amount;
+    
+    if (window.api) {
+      await window.api.addFundTransaction(tx);
+      await window.api.updateCustomFund(fund);
+    }
+    
+    updateSavingsChart();
+  }
+}
+
+async function deleteTransactionFromFund(fundId, txId) {
+  const fund = customFunds.find(f => f.id === fundId);
+  if (fund && fund.transactions) {
+    const idx = fund.transactions.findIndex(t => t.id === txId);
+    if (idx > -1) {
+      fund.amount -= fund.transactions[idx].amount;
+      fund.transactions.splice(idx, 1);
+      if (window.api) {
+        await window.api.deleteFundTransaction(txId);
+        await window.api.updateCustomFund(fund);
+      }
+      updateSavingsChart();
+    }
+  }
+}
 
 
 
