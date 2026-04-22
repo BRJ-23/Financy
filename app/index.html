@@ -9,6 +9,192 @@
 </head>
 
 <body>
+  <!-- Icon Library -->
+  <svg style="display: none;">
+    <symbol id="icon-filter-advanced" viewBox="0 0 24 24">
+      <line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+      <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+      <line x1="11" y1="18" x2="13" y2="18" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+    </symbol>
+  </svg>
+
+  <!-- Month Content Template -->
+  <template id="month-tab-template">
+    <div class="month-layout">
+      <!-- LEFT: Transactions Table -->
+      <div class="month-table-panel">
+        <div class="month-table-topbar">
+          <h3 class="month-table-title">Transacciones</h3>
+          <div class="tx-filter-wrapper" style="display: flex; align-items: center; gap: 6px;">
+            <input type="text" id="{{MONTH}}-tx-filter" placeholder="Buscar..." class="tx-filter-input" oninput="renderTransactionTable('{{MONTH}}')">
+            <button class="advanced-filter-btn" onclick="toggleAdvancedFilter('{{MONTH}}')" title="Filtros por columna" style="font-size: 18px; line-height: 1;">
+              ☰
+            </button>
+          </div>
+        </div>
+        <div class="month-table-scroll">
+          <table class="transactions-table">
+            <thead>
+              <tr class="add-tx-row">
+                <td class="col-date">
+                  <input type="text" id="{{MONTH}}-add-date-display" placeholder="Hoy" class="tx-input" disabled style="background: transparent; border: none; font-size: 11px;">
+                </td>
+                <td class="col-desc">
+                  <input type="text" id="{{MONTH}}-add-desc" placeholder="Descripción..." class="tx-input">
+                </td>
+                <td class="col-amount">
+                  <input type="number" id="{{MONTH}}-add-amount" placeholder="€0.00" step="0.01" min="0" class="tx-input tx-amount">
+                </td>
+                <td class="col-type">
+                  <select id="{{MONTH}}-add-type" class="tx-select" onchange="onAddTypeChange('{{MONTH}}')">
+                    <option value="">Tipo...</option>
+                    <option value="income">💰 Ingreso</option>
+                    <option value="monthly">🏠 Gasto Mensual</option>
+                    <option value="personal">🛍️ Gasto Personal</option>
+                    <option value="investment">📈 Inversión</option>
+                  </select>
+                </td>
+                <td class="col-detail" id="{{MONTH}}-add-context-cell"></td>
+                <td class="col-action">
+                  <button class="add-tx-btn" onclick="addTransaction('{{MONTH}}')" title="Añadir transacción">+</button>
+                </td>
+              </tr>
+              <tr>
+                <th class="col-date">Fecha</th>
+                <th class="col-desc">Descripción</th>
+                <th class="col-amount">Cantidad</th>
+                <th class="col-type">Tipo</th>
+                <th class="col-detail">Detalle/Categoría</th>
+                <th class="col-action"></th>
+              </tr>
+              <tr id="{{MONTH}}-filter-row" class="filter-row" style="display: none;">
+                <td><input type="text" id="{{MONTH}}-filter-date" placeholder="D/M" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td><input type="text" id="{{MONTH}}-filter-desc" placeholder="Filtrar..." class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td><input type="text" id="{{MONTH}}-filter-amt" placeholder="€" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td><input type="text" id="{{MONTH}}-filter-type" placeholder="Tipo" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td><input type="text" id="{{MONTH}}-filter-detail" placeholder="Categoría" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td></td>
+              </tr>
+            </thead>
+            <tbody id="{{MONTH}}-tx-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RIGHT: Summary Panel -->
+      <div class="month-summary-panel">
+        <div class="month-summary-left">
+          <div class="month-summary-header">
+            <h2 class="month-title">{{MONTH_LABEL}}</h2>
+          </div>
+
+          <div class="month-progress-section">
+            <!-- Income & Savings combined row -->
+            <div class="month-stats-container">
+              <div class="month-stats-box">
+                <div class="stats-label-group">
+                  <span class="stat-icon">💰</span>
+                  <span class="stat-label">Ingresos</span>
+                </div>
+                <span class="stat-value income-value" id="{{MONTH}}-income-total">€0.00</span>
+              </div>
+              <div class="month-stats-box">
+                <div class="stats-label-group">
+                  <span class="stat-icon">⏳</span>
+                  <span class="stat-label">Ahorro</span>
+                  <span class="pct-badge savings-badge" id="{{MONTH}}-savings-pct">0%</span>
+                </div>
+                <span class="stat-value savings-value" id="{{MONTH}}-savings-display">€0.00</span>
+                <small class="month-progress-info" id="{{MONTH}}-savings-info" style="margin-top: 5px; font-size: 9px; opacity: 0.8;">Ahorro base + sobrantes de presupuesto</small>
+              </div>
+            </div>
+
+            <!-- Monthly bar -->
+            <div class="month-progress-item">
+              <div class="month-progress-header">
+                <div class="progress-label-group">
+                  <span class="progress-dot monthly-dot"></span>
+                  <span class="progress-cat-label">Gastos Mensuales</span>
+                  <span class="pct-badge monthly-badge" id="{{MONTH}}-monthly-pct">40%</span>
+                </div>
+                <span class="progress-remaining monthly-remaining" id="{{MONTH}}-monthly-remaining">€0.00 disp.</span>
+              </div>
+              <div class="month-progress-track">
+                <div class="month-progress-fill monthly-fill" id="{{MONTH}}-monthly-fill" style="width:0%"></div>
+              </div>
+              <small class="month-progress-info" id="{{MONTH}}-monthly-info">Usado: €0 / €0</small>
+            </div>
+
+            <!-- Personal bar -->
+            <div class="month-progress-item">
+              <div class="month-progress-header">
+                <div class="progress-label-group">
+                  <span class="progress-dot personal-dot"></span>
+                  <span class="progress-cat-label">Gastos Personales</span>
+                  <span class="pct-badge personal-badge" id="{{MONTH}}-personal-pct">20%</span>
+                </div>
+                <span class="progress-remaining personal-remaining" id="{{MONTH}}-personal-remaining">€0.00 disp.</span>
+              </div>
+              <div class="month-progress-track">
+                <div class="month-progress-fill personal-fill" id="{{MONTH}}-personal-fill" style="width:0%"></div>
+              </div>
+              <small class="month-progress-info" id="{{MONTH}}-personal-info">Usado: €0 / €0</small>
+            </div>
+
+            <!-- Investment bar -->
+            <div class="month-progress-item">
+              <div class="month-progress-header">
+                <div class="progress-label-group">
+                  <span class="progress-dot investment-dot"></span>
+                  <span class="progress-cat-label">Inversiones</span>
+                  <span class="pct-badge investment-badge" id="{{MONTH}}-investment-pct">20%</span>
+                </div>
+                <span class="progress-remaining investment-remaining" id="{{MONTH}}-investment-remaining">€0.00 disp.</span>
+              </div>
+              <div class="month-progress-track">
+                <div class="month-progress-fill investment-fill" id="{{MONTH}}-investment-fill" style="width:0%"></div>
+              </div>
+              <small class="month-progress-info" id="{{MONTH}}-investment-info">Usado: €0 / €0</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom: Doughnut charts title -->
+        <div style="padding: 12px 22px 0 22px; background: white; margin-top: 0;">
+          <h3 style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; font-weight: 700;">Distribución de Gastos</h3>
+        </div>
+
+        <!-- Bottom: Doughnut charts -->
+        <div class="month-summary-right">
+          <div class="month-doughnut-card">
+            <div class="doughnut-card-title monthly-title">🏠 Mensuales</div>
+            <div class="doughnut-wrap">
+              <canvas id="{{MONTH}}-monthly-chart"></canvas>
+              <div id="{{MONTH}}-monthly-center-text" class="doughnut-center">€0</div>
+            </div>
+            <div id="{{MONTH}}-monthly-legend" class="doughnut-legend"></div>
+          </div>
+          <div class="month-doughnut-card">
+            <div class="doughnut-card-title personal-title">🛍️ Personales</div>
+            <div class="doughnut-wrap">
+              <canvas id="{{MONTH}}-personal-chart"></canvas>
+              <div id="{{MONTH}}-personal-center-text" class="doughnut-center">€0</div>
+            </div>
+            <div id="{{MONTH}}-personal-legend" class="doughnut-legend"></div>
+          </div>
+          <div class="month-doughnut-card">
+            <div class="doughnut-card-title investment-title">📈 Inversiones</div>
+            <div class="doughnut-wrap">
+              <canvas id="{{MONTH}}-investment-chart"></canvas>
+              <div id="{{MONTH}}-investment-center-text" class="doughnut-center">€0</div>
+            </div>
+            <div id="{{MONTH}}-investment-legend" class="doughnut-legend"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
   <div class="container">
     <!-- Tabs Navigation (Left Sidebar) -->
     <div class="tabs-nav">

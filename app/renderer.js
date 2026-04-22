@@ -495,177 +495,27 @@ function initializeMonthlyTabs() {
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
     'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
+  const template = document.getElementById('month-tab-template');
+  if (!template) return;
+
   months.forEach(month => {
-    const monthLabel = month.charAt(0).toUpperCase() + month.slice(1);
     const tabContent = document.getElementById(month);
+    if (!tabContent) return;
+
     tabContent.classList.add('month-tab');
-    tabContent.innerHTML = `
-      <div class="month-layout">
-        <!-- ═══ LEFT: Transactions Table ══════════════════════════ -->
-        <div class="month-table-panel">
-          <div class="month-table-topbar">
-            <h3 class="month-table-title">Transacciones</h3>
-          </div>
-          <div class="month-table-scroll">
-            <table class="transactions-table">
-              <thead>
-                <tr class="add-tx-row">
-                  <td class="col-date">
-                    <input type="text" id="${month}-add-date-display" placeholder="Hoy" class="tx-input" disabled style="background: transparent; border: none; font-size: 11px;">
-                  </td>
-                  <td class="col-desc">
-                    <input type="text" id="${month}-add-desc" placeholder="Descripción..." class="tx-input">
-                  </td>
-                  <td class="col-amount">
-                    <input type="number" id="${month}-add-amount" placeholder="€0.00" step="0.01" min="0" class="tx-input tx-amount">
-                  </td>
-                  <td class="col-type">
-                    <select id="${month}-add-type" class="tx-select" onchange="onAddTypeChange('${month}')">
-                      <option value="">Tipo...</option>
-                      <option value="income">💰 Ingreso</option>
-                      <option value="monthly">🏠 Gasto Mensual</option>
-                      <option value="personal">🛍️ Gasto Personal</option>
-                      <option value="investment">📈 Inversión</option>
-                    </select>
-                  </td>
-                  <td class="col-detail" id="${month}-add-context-cell"></td>
-                  <td class="col-action">
-                    <button class="add-tx-btn" onclick="addTransaction('${month}')" title="Añadir transacción">+</button>
-                  </td>
-                </tr>
-                <tr>
-                  <th class="col-date">Fecha</th>
-                  <th class="col-desc">Descripción</th>
-                  <th class="col-amount">Cantidad</th>
-                  <th class="col-type">Tipo</th>
-                  <th class="col-detail">Detalle/Categoría</th>
-                  <th class="col-action"></th>
-                </tr>
-              </thead>
-              <tbody id="${month}-tx-body"></tbody>
-            </table>
-          </div>
-        </div>
 
-        <!-- ═══ RIGHT: Summary Panel ═══════════════════════════════════ -->
-        <div class="month-summary-panel">
+    // Clone template content
+    let html = template.innerHTML;
 
-          <!-- Top: mode selector + progress bars -->
-          <div class="month-summary-left">
-            <div class="month-summary-header">
-              <h2 class="month-title">${monthLabel}</h2>
-              <div class="month-mode-row">
-                <label for="${month}-income-mode" class="month-mode-label">Modo de reparto</label>
-                <select id="${month}-income-mode" class="month-mode-select"></select>
-              </div>
-            </div>
+    // Replace placeholders: {{MONTH}} and {{MONTH_LABEL}}
+    const monthLabel = month.charAt(0).toUpperCase() + month.slice(1);
+    html = html.replace(/\{\{MONTH\}\}/g, month);
+    html = html.replace(/\{\{MONTH_LABEL\}\}/g, monthLabel);
 
-            <div class="month-progress-section">
-              <!-- Income & Savings combined row -->
-              <div class="month-stats-container">
-                <div class="month-stats-box">
-                  <div class="stats-label-group">
-                    <span class="stat-icon">💰</span>
-                    <span class="stat-label">Ingresos</span>
-                  </div>
-                  <span class="stat-value income-value" id="${month}-income-total">€0.00</span>
-                </div>
-                <div class="month-stats-box">
-                  <div class="stats-label-group">
-                    <span class="stat-icon">⏳</span>
-                    <span class="stat-label">Ahorro</span>
-                    <span class="pct-badge savings-badge" id="${month}-savings-pct">0%</span>
-                  </div>
-                  <span class="stat-value savings-value" id="${month}-savings-display">€0.00</span>
-                  <small class="month-progress-info" id="${month}-savings-info" style="margin-top: 5px; font-size: 9px; opacity: 0.8;">Ahorro base + sobrantes de presupuesto</small>
-                </div>
-              </div>
+    tabContent.innerHTML = html;
 
-              <!-- Monthly bar -->
-              <div class="month-progress-item">
-                <div class="month-progress-header">
-                  <div class="progress-label-group">
-                    <span class="progress-dot monthly-dot"></span>
-                    <span class="progress-cat-label">Gastos Mensuales</span>
-                    <span class="pct-badge monthly-badge" id="${month}-monthly-pct">40%</span>
-                  </div>
-                  <span class="progress-remaining monthly-remaining" id="${month}-monthly-remaining">€0.00 disp.</span>
-                </div>
-                <div class="month-progress-track">
-                  <div class="month-progress-fill monthly-fill" id="${month}-monthly-fill" style="width:0%"></div>
-                </div>
-                <small class="month-progress-info" id="${month}-monthly-info">Usado: €0 / €0</small>
-              </div>
-
-              <!-- Personal bar -->
-              <div class="month-progress-item">
-                <div class="month-progress-header">
-                  <div class="progress-label-group">
-                    <span class="progress-dot personal-dot"></span>
-                    <span class="progress-cat-label">Gastos Personales</span>
-                    <span class="pct-badge personal-badge" id="${month}-personal-pct">20%</span>
-                  </div>
-                  <span class="progress-remaining personal-remaining" id="${month}-personal-remaining">€0.00 disp.</span>
-                </div>
-                <div class="month-progress-track">
-                  <div class="month-progress-fill personal-fill" id="${month}-personal-fill" style="width:0%"></div>
-                </div>
-                <small class="month-progress-info" id="${month}-personal-info">Usado: €0 / €0</small>
-              </div>
-
-              <!-- Investment bar -->
-              <div class="month-progress-item">
-                <div class="month-progress-header">
-                  <div class="progress-label-group">
-                    <span class="progress-dot investment-dot"></span>
-                    <span class="progress-cat-label">Inversiones</span>
-                    <span class="pct-badge investment-badge" id="${month}-investment-pct">20%</span>
-                  </div>
-                  <span class="progress-remaining investment-remaining" id="${month}-investment-remaining">€0.00 disp.</span>
-                </div>
-                <div class="month-progress-track">
-                  <div class="month-progress-fill investment-fill" id="${month}-investment-fill" style="width:0%"></div>
-                </div>
-                <small class="month-progress-info" id="${month}-investment-info">Usado: €0 / €0</small>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom: Doughnut charts title -->
-          <div style="padding: 12px 22px 0 22px; background: white; margin-top: 0;">
-            <h3 style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; font-weight: 700;">Distribución de Gastos</h3>
-          </div>
-
-          <!-- Bottom: Doughnut charts -->
-          <div class="month-summary-right">
-            <div class="month-doughnut-card">
-              <div class="doughnut-card-title monthly-title">🏠 Mensuales</div>
-              <div class="doughnut-wrap">
-                <canvas id="${month}-monthly-chart"></canvas>
-                <div id="${month}-monthly-center-text" class="doughnut-center">€0</div>
-              </div>
-              <div id="${month}-monthly-legend" class="doughnut-legend"></div>
-            </div>
-            <div class="month-doughnut-card">
-              <div class="doughnut-card-title personal-title">🛍️ Personales</div>
-              <div class="doughnut-wrap">
-                <canvas id="${month}-personal-chart"></canvas>
-                <div id="${month}-personal-center-text" class="doughnut-center">€0</div>
-              </div>
-              <div id="${month}-personal-legend" class="doughnut-legend"></div>
-            </div>
-            <div class="month-doughnut-card">
-              <div class="doughnut-card-title investment-title">📈 Inversiones</div>
-              <div class="doughnut-wrap">
-                <canvas id="${month}-investment-chart"></canvas>
-                <div id="${month}-investment-center-text" class="doughnut-center">€0</div>
-              </div>
-              <div id="${month}-investment-legend" class="doughnut-legend"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    // Trigger initial render of data for this month
+    updateMonthlyDashboard(month);
   });
 }
 
@@ -859,7 +709,7 @@ function updateBudgetAllocations(month) {
   budget.investments      = investments;
   budget.savings          = baseSavings;
 
-  updateExpenseDisplay(month);
+  updateMonthlyDashboard(month);
 }
 
 // Category-distribution doughnuts (one per expense type)
@@ -946,7 +796,8 @@ function createCategoryCharts(month) {
   buildDoughnut(`${month}-investment-chart`, budget.expenses.filter(e => e.type === 'investment'), budget.investments);
 }
 
-function updateExpenseDisplay(month) {
+// ─── Unified Monthly Update ──────────────────────────────────────────────────
+function updateMonthlyDashboard(month) {
   const budget = monthlyBudgets[month];
 
   const monthlyUsed    = budget.expenses.filter(e => e.type === 'monthly').reduce((s, e) => s + e.amount, 0);
@@ -1055,19 +906,54 @@ function renderTransactionTable(month) {
     });
   });
 
+  // Get filter value
+  const filterInput = document.getElementById(`${month}-tx-filter`);
+  const filterText = filterInput ? filterInput.value.toLowerCase().trim() : '';
+
+  let filteredRows = rows;
+  if (filterText) {
+    filteredRows = rows.filter(r => 
+      r.description.toLowerCase().includes(filterText) || 
+      r.detail.toLowerCase().includes(filterText) ||
+      (TYPE_META[r.kind] && TYPE_META[r.kind].label.toLowerCase().includes(filterText))
+    );
+  }
+
+  // Column filters
+  const fDate = document.getElementById(`${month}-filter-date`)?.value.toLowerCase().trim();
+  const fDesc = document.getElementById(`${month}-filter-desc`)?.value.toLowerCase().trim();
+  const fAmt  = document.getElementById(`${month}-filter-amt`)?.value.toLowerCase().trim();
+  const fType = document.getElementById(`${month}-filter-type`)?.value.toLowerCase().trim();
+  const fDet  = document.getElementById(`${month}-filter-detail`)?.value.toLowerCase().trim();
+
+  if (fDate || fDesc || fAmt || fType || fDet) {
+    filteredRows = filteredRows.filter(r => {
+      if (fDate) {
+        const d = new Date(r.date);
+        const dStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (!dStr.includes(fDate)) return false;
+      }
+      if (fDesc && !r.description.toLowerCase().includes(fDesc)) return false;
+      if (fAmt && !r.amount.toString().includes(fAmt)) return false;
+      if (fType && !TYPE_META[r.kind].label.toLowerCase().includes(fType)) return false;
+      if (fDet && !r.detail.toLowerCase().includes(fDet)) return false;
+      return true;
+    });
+  }
+
   // Sort by date (descending), most recent first
-  rows.sort((a, b) => {
+  filteredRows.sort((a, b) => {
     if (!a.date) return 1;
     if (!b.date) return -1;
     return new Date(b.date) - new Date(a.date);
   });
 
-  if (rows.length === 0) {
+  if (filteredRows.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" class="tx-empty">Sin transacciones todavía. Añade una arriba ↑</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = rows.map(row => {
+  tbody.innerHTML = filteredRows.map(row => {
     const meta  = TYPE_META[row.kind] || { label: row.kind, cls: '' };
     const color = row.positive ? '#10b981' : '#ef4444';
     const sign  = row.positive ? '+' : '-';
@@ -2283,6 +2169,13 @@ window.handleCtxEditYear = handleCtxEditYear;
 window.handleCtxDeleteYear = handleCtxDeleteYear;
 window.addTransactionToFund = addTransactionToFund;
 window.deleteTransactionFromFund = deleteTransactionFromFund;
+window.toggleAdvancedFilter = toggleAdvancedFilter;
+
+function toggleAdvancedFilter(month) {
+  const row = document.getElementById(`${month}-filter-row`);
+  if (!row) return;
+  row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
 
 async function addTransactionToFund(fundId) {
   const descInput = document.getElementById(`fund-tx-desc-${fundId}`);

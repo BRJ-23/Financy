@@ -1223,10 +1223,79 @@ button:hover {
 
 .month-table-topbar {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 12px 18px 8px;
+  padding: 12px 18px;
   border-bottom: 1px solid #f3f4f6;
   flex-shrink: 0;
+}
+
+.tx-filter-input {
+  padding: 2px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 12px;
+  width: 140px;
+  height: 26px;
+  transition: all 0.2s;
+  background-color: #f9fafb;
+}
+
+.tx-filter-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  width: 180px;
+}
+
+.advanced-filter-btn {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.advanced-filter-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #1f2937;
+}
+
+.filter-row td {
+  padding: 2px 4px !important;
+  background-color: #f9fafb;
+}
+
+.tx-filter-col {
+  width: 100%;
+  display: block;
+  padding: 0px 4px;
+  height: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  font-size: 10px;
+  background: white;
+  color: #374151;
+  box-sizing: border-box;
+}
+
+.tx-filter-col:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.advanced-filter-btn svg {
+  display: block;
 }
 
 .month-table-title {
