@@ -631,6 +631,11 @@ function initializeMonthlyTabs() {
             </div>
           </div>
 
+          <!-- Bottom: Doughnut charts title -->
+          <div style="padding: 12px 22px 0 22px; background: white; margin-top: 0;">
+            <h3 style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; font-weight: 700;">Distribución de Gastos</h3>
+          </div>
+
           <!-- Bottom: Doughnut charts -->
           <div class="month-summary-right">
             <div class="month-doughnut-card">
@@ -974,10 +979,10 @@ function updateExpenseDisplay(month) {
   updateBar(`${month}-personal-fill`,   `${month}-personal-remaining`,   personalUsed,   budget.personalExpenses);
   updateBar(`${month}-investment-fill`, `${month}-investment-remaining`, investmentUsed, budget.investments);
 
-  // Doughnut center texts (Now showing remaining amount)
-  setEl(`${month}-monthly-center-text`,    `€${monthlyLeftover.toFixed(2)}`);
-  setEl(`${month}-personal-center-text`,   `€${personalLeftover.toFixed(2)}`);
-  setEl(`${month}-investment-center-text`, `€${investmentLeftover.toFixed(2)}`);
+  // Doughnut center texts (Now showing total used amount)
+  setEl(`${month}-monthly-center-text`,    `€${monthlyUsed.toFixed(2)}`);
+  setEl(`${month}-personal-center-text`,   `€${personalUsed.toFixed(2)}`);
+  setEl(`${month}-investment-center-text`, `€${investmentUsed.toFixed(2)}`);
 
   // Doughnut charts & legends
   createCategoryCharts(month);
