@@ -68,12 +68,12 @@
                 <th class="col-action"></th>
               </tr>
               <tr id="{{MONTH}}-filter-row" class="filter-row" style="display: none;">
-                <td><input type="text" id="{{MONTH}}-filter-date" placeholder="D/M" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
-                <td><input type="text" id="{{MONTH}}-filter-desc" placeholder="Filtrar..." class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
-                <td><input type="text" id="{{MONTH}}-filter-amt" placeholder="€" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
-                <td><input type="text" id="{{MONTH}}-filter-type" placeholder="Tipo" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
-                <td><input type="text" id="{{MONTH}}-filter-detail" placeholder="Categoría" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
-                <td></td>
+                <td class="col-date"><input type="text" id="{{MONTH}}-filter-date" placeholder="D/M" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-desc"><input type="text" id="{{MONTH}}-filter-desc" placeholder="Filtrar..." class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-amount"><input type="text" id="{{MONTH}}-filter-amt" placeholder="€" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-type"><input type="text" id="{{MONTH}}-filter-type" placeholder="Tipo" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-detail"><input type="text" id="{{MONTH}}-filter-detail" placeholder="Categoría" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-action"></td>
               </tr>
             </thead>
             <tbody id="{{MONTH}}-tx-body"></tbody>

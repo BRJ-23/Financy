@@ -1273,13 +1273,16 @@ button:hover {
 .filter-row td {
   padding: 2px 4px !important;
   background-color: #f9fafb;
+  vertical-align: middle;
+  overflow: hidden;
 }
 
 .tx-filter-col {
-  width: 100%;
+  width: 100% !important;
+  min-width: 0 !important;
   display: block;
   padding: 0px 4px;
-  height: 18px;
+  height: 22px;
   border: 1px solid #e5e7eb;
   border-radius: 3px;
   font-size: 10px;
