@@ -1635,7 +1635,10 @@ function renderCustomFunds(appSavings = 0) {
       <div class="custom-fund-card ${fund.isDefault ? 'is-default' : ''}">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
           <div>
-            <strong style="color: #374151; font-size: 14px;">${fund.name}</strong>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="progress-dot savings-dot"></span>
+              <strong style="color: #374151; font-size: 14px;">${fund.name}</strong>
+            </div>
             ${fund.isDefault ? '<div style="margin-top: 4px;"><span style="font-size: 10px; background: #d1fae5; color: #047857; padding: 2px 6px; border-radius: 4px;">Por Defecto</span></div>' : ''}
           </div>
           <div class="goal-options-wrapper" style="margin-top: -4px; margin-right: -4px;">
@@ -1646,8 +1649,11 @@ function renderCustomFunds(appSavings = 0) {
             </div>
           </div>
         </div>
-        <div style="font-size: 20px; font-weight: bold; color: ${fund.isDefault ? '#10b981' : '#111827'}; margin-top: 5px;">
+        <div style="font-size: 20px; font-weight: bold; color: ${fund.isDefault ? '#10b981' : '#111827'}; margin-top: 5px; margin-bottom: 8px;">
           €${displayAmount.toFixed(2)}
+        </div>
+        <div class="month-progress-track" style="height: 4px; margin-top: auto; background: #f3f4f6;">
+          <div class="month-progress-fill savings-fill" style="width: 100%;"></div>
         </div>
       </div>
     `;
@@ -1934,18 +1940,24 @@ function renderInvestmentGoals() {
           </div>
         </h4>
         
-        <div class="goal-progress">
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${percentage}%;"></div>
+        <div class="month-progress-item" style="margin: 15px 0 10px 0;">
+          <div class="month-progress-header">
+            <div class="progress-label-group">
+              <span class="progress-dot investment-dot"></span>
+              <span class="progress-cat-label">Progreso</span>
+              <span class="pct-badge investment-badge">${percentage.toFixed(0)}%</span>
+            </div>
+            <span class="progress-remaining investment-remaining" style="font-size: 11px; font-weight: 600; color: #8b5cf6;">
+              ${isComplete ? '✓ Completado' : `Falta €${remaining.toFixed(2)}`}
+            </span>
+          </div>
+          <div class="month-progress-track">
+            <div class="month-progress-fill investment-fill" style="width: ${percentage}%;"></div>
           </div>
         </div>
         
-        <div class="goal-amount">
-          <strong>Ahorrado:</strong> €${goal.currentAmount.toFixed(2)} / €${goal.targetAmount.toFixed(2)}
-        </div>
-        
-        <div class="goal-amount" ${isComplete ? 'style="color: #10b981; font-weight: bold;"' : ''}>
-          ${isComplete ? '✓ ¡Objetivo alcanzado!' : (remaining > 0 ? `Falta: €${remaining.toFixed(2)}` : '')}
+        <div class="goal-amount" style="margin-top: 5px; font-size: 11px; color: #6b7280;">
+          <strong>Total acumulado:</strong> €${goal.currentAmount.toFixed(2)} / €${goal.targetAmount.toFixed(2)}
         </div>
         
         <div class="goal-add-funds">

@@ -423,16 +423,17 @@ button:hover {
 
 .progress-bar {
   width: 100%;
-  height: 12px;
-  background-color: #e5e7eb;
-  border-radius: 6px;
+  height: 8px;
+  background-color: #f3f4f6;
+  border-radius: 99px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   background-color: #6366f1;
-  transition: width 0.3s;
+  border-radius: 99px;
+  transition: width 0.4s ease;
 }
 
 .goal-amount {
@@ -1069,6 +1070,7 @@ button:hover {
 .monthly-fill    { background: linear-gradient(90deg, #ef4444, #fca5a5); }
 .personal-fill   { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
 .investment-fill { background: linear-gradient(90deg, #8b5cf6, #c4b5fd); }
+.savings-fill    { background: linear-gradient(90deg, #10b981, #6ee7b7); }
 
 .month-progress-info {
   font-size: 10px;
