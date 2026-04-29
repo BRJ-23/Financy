@@ -26,8 +26,10 @@
         <div class="month-table-topbar">
           <h3 class="month-table-title">Transacciones</h3>
           <div class="tx-filter-wrapper" style="display: flex; align-items: center; gap: 6px;">
-            <input type="text" id="{{MONTH}}-tx-filter" placeholder="Buscar..." class="tx-filter-input" oninput="renderTransactionTable('{{MONTH}}')">
-            <button class="advanced-filter-btn" onclick="toggleAdvancedFilter('{{MONTH}}')" title="Filtros por columna" style="font-size: 18px; line-height: 1;">
+            <input type="text" id="{{MONTH}}-tx-filter" placeholder="Buscar..." class="tx-filter-input"
+              oninput="renderTransactionTable('{{MONTH}}')">
+            <button class="advanced-filter-btn" onclick="toggleAdvancedFilter('{{MONTH}}')" title="Filtros por columna"
+              style="font-size: 18px; line-height: 1;">
               ☰
             </button>
           </div>
@@ -37,13 +39,15 @@
             <thead>
               <tr class="add-tx-row">
                 <td class="col-date">
-                  <input type="text" id="{{MONTH}}-add-date-display" placeholder="Hoy" class="tx-input" disabled style="background: transparent; border: none; font-size: 11px;">
+                  <input type="text" id="{{MONTH}}-add-date-display" placeholder="Hoy" class="tx-input" disabled
+                    style="background: transparent; border: none; font-size: 11px;">
                 </td>
                 <td class="col-desc">
                   <input type="text" id="{{MONTH}}-add-desc" placeholder="Descripción..." class="tx-input">
                 </td>
                 <td class="col-amount">
-                  <input type="number" id="{{MONTH}}-add-amount" placeholder="€0.00" step="0.01" min="0" class="tx-input tx-amount">
+                  <input type="number" id="{{MONTH}}-add-amount" placeholder="€0.00" step="0.01" min="0"
+                    class="tx-input tx-amount">
                 </td>
                 <td class="col-type">
                   <select id="{{MONTH}}-add-type" class="tx-select" onchange="onAddTypeChange('{{MONTH}}')">
@@ -68,11 +72,16 @@
                 <th class="col-action"></th>
               </tr>
               <tr id="{{MONTH}}-filter-row" class="filter-row" style="display: none;">
-                <td class="col-date"><input type="text" id="{{MONTH}}-filter-date" placeholder="D/M" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
-                <td class="col-desc"><input type="text" id="{{MONTH}}-filter-desc" placeholder="Filtrar..." class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
-                <td class="col-amount"><input type="text" id="{{MONTH}}-filter-amt" placeholder="€" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
-                <td class="col-type"><input type="text" id="{{MONTH}}-filter-type" placeholder="Tipo" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
-                <td class="col-detail"><input type="text" id="{{MONTH}}-filter-detail" placeholder="Categoría" class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-date"><input type="text" id="{{MONTH}}-filter-date" placeholder="D/M"
+                    class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-desc"><input type="text" id="{{MONTH}}-filter-desc" placeholder="Filtrar..."
+                    class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-amount"><input type="text" id="{{MONTH}}-filter-amt" placeholder="€"
+                    class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-type"><input type="text" id="{{MONTH}}-filter-type" placeholder="Tipo"
+                    class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
+                <td class="col-detail"><input type="text" id="{{MONTH}}-filter-detail" placeholder="Categoría"
+                    class="tx-filter-col" oninput="renderTransactionTable('{{MONTH}}')"></td>
                 <td class="col-action"></td>
               </tr>
             </thead>
@@ -105,7 +114,8 @@
                   <span class="pct-badge savings-badge" id="{{MONTH}}-savings-pct">0%</span>
                 </div>
                 <span class="stat-value savings-value" id="{{MONTH}}-savings-display">€0.00</span>
-                <small class="month-progress-info" id="{{MONTH}}-savings-info" style="margin-top: 5px; font-size: 9px; opacity: 0.8;">Ahorro base + sobrantes de presupuesto</small>
+                <small class="month-progress-info" id="{{MONTH}}-savings-info"
+                  style="margin-top: 5px; font-size: 9px; opacity: 0.8;">Ahorro base + sobrantes de presupuesto</small>
               </div>
             </div>
 
@@ -149,7 +159,8 @@
                   <span class="progress-cat-label">Inversiones</span>
                   <span class="pct-badge investment-badge" id="{{MONTH}}-investment-pct">20%</span>
                 </div>
-                <span class="progress-remaining investment-remaining" id="{{MONTH}}-investment-remaining">€0.00 disp.</span>
+                <span class="progress-remaining investment-remaining" id="{{MONTH}}-investment-remaining">€0.00
+                  disp.</span>
               </div>
               <div class="month-progress-track">
                 <div class="month-progress-fill investment-fill" id="{{MONTH}}-investment-fill" style="width:0%"></div>
@@ -161,7 +172,9 @@
 
         <!-- Bottom: Doughnut charts title -->
         <div style="padding: 12px 22px 0 22px; background: white; margin-top: 0;">
-          <h3 style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; font-weight: 700;">Distribución de Gastos</h3>
+          <h3
+            style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; font-weight: 700;">
+            Distribución de Gastos</h3>
         </div>
 
         <!-- Bottom: Doughnut charts -->
@@ -199,48 +212,75 @@
     <!-- Tabs Navigation (Left Sidebar) -->
     <div class="tabs-nav">
       <div class="sidebar-header">
-        <h1 style="margin: 20px 20px 30px 20px; font-size: 24px; color: #1f2937; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 10px;">
+        <h1
+          style="margin: 20px 20px 30px 20px; font-size: 24px; color: #1f2937; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 10px;">
           Financy
         </h1>
       </div>
       <button class="tab-button active" data-tab="main">Panel Principal</button>
       <button class="tab-button" data-tab="huchas-objetivos">Fondos y Objetivos</button>
-      <div class="nav-section-title" style="font-size: 11px; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin: 20px 20px 10px 20px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;">
+      <div class="nav-section-title"
+        style="font-size: 11px; text-transform: uppercase; color: #9ca3af; font-weight: 700; margin: 20px 20px 10px 20px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;">
         <span>Meses</span>
         <div style="display: flex; gap: 8px;">
-          <button onclick="navigateMonth(-1)" style="background: none; border: none; cursor: pointer; padding: 0; color: #9ca3af; font-size: 14px; transition: color 0.2s;" onmouseover="this.style.color='#4b5563'" onmouseout="this.style.color='#9ca3af'">▲</button>
-          <button onclick="navigateMonth(1)" style="background: none; border: none; cursor: pointer; padding: 0; color: #9ca3af; font-size: 14px; transition: color 0.2s;" onmouseover="this.style.color='#4b5563'" onmouseout="this.style.color='#9ca3af'">▼</button>
+          <button onclick="navigateMonth(-1)"
+            style="background: none; border: none; cursor: pointer; padding: 0; color: #9ca3af; font-size: 14px; transition: color 0.2s;"
+            onmouseover="this.style.color='#4b5563'" onmouseout="this.style.color='#9ca3af'">▲</button>
+          <button onclick="navigateMonth(1)"
+            style="background: none; border: none; cursor: pointer; padding: 0; color: #9ca3af; font-size: 14px; transition: color 0.2s;"
+            onmouseover="this.style.color='#4b5563'" onmouseout="this.style.color='#9ca3af'">▼</button>
         </div>
       </div>
       <style>
-        #months-nav-container::-webkit-scrollbar { display: none; }
+        #months-nav-container::-webkit-scrollbar {
+          display: none;
+        }
       </style>
       <div style="position: relative;">
         <!-- Sombreado superior -->
-        <div style="position: absolute; top: 0; left: 0; right: 0; height: 12px; background: linear-gradient(to bottom, rgba(0,0,0,0.06), transparent); pointer-events: none; z-index: 2;"></div>
-        
-        <div id="months-nav-container" style="height: 144px; overflow-y: auto; scroll-behavior: smooth; scroll-snap-type: y mandatory; display: flex; flex-direction: column; scrollbar-width: none; -ms-overflow-style: none;">
-          <button class="tab-button" data-tab="enero" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Enero</button>
-          <button class="tab-button" data-tab="febrero" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Febrero</button>
-          <button class="tab-button" data-tab="marzo" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Marzo</button>
-          <button class="tab-button" data-tab="abril" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Abril</button>
-          <button class="tab-button" data-tab="mayo" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Mayo</button>
-          <button class="tab-button" data-tab="junio" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Junio</button>
-          <button class="tab-button" data-tab="julio" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Julio</button>
-          <button class="tab-button" data-tab="agosto" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Agosto</button>
-          <button class="tab-button" data-tab="septiembre" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Septiembre</button>
-          <button class="tab-button" data-tab="octubre" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Octubre</button>
-          <button class="tab-button" data-tab="noviembre" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Noviembre</button>
-          <button class="tab-button" data-tab="diciembre" style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Diciembre</button>
+        <div
+          style="position: absolute; top: 0; left: 0; right: 0; height: 12px; background: linear-gradient(to bottom, rgba(0,0,0,0.06), transparent); pointer-events: none; z-index: 2;">
         </div>
-        
+
+        <div id="months-nav-container"
+          style="height: 144px; overflow-y: auto; scroll-behavior: smooth; scroll-snap-type: y mandatory; display: flex; flex-direction: column; scrollbar-width: none; -ms-overflow-style: none;">
+          <button class="tab-button" data-tab="enero"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Enero</button>
+          <button class="tab-button" data-tab="febrero"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Febrero</button>
+          <button class="tab-button" data-tab="marzo"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Marzo</button>
+          <button class="tab-button" data-tab="abril"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Abril</button>
+          <button class="tab-button" data-tab="mayo"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Mayo</button>
+          <button class="tab-button" data-tab="junio"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Junio</button>
+          <button class="tab-button" data-tab="julio"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Julio</button>
+          <button class="tab-button" data-tab="agosto"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Agosto</button>
+          <button class="tab-button" data-tab="septiembre"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Septiembre</button>
+          <button class="tab-button" data-tab="octubre"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Octubre</button>
+          <button class="tab-button" data-tab="noviembre"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Noviembre</button>
+          <button class="tab-button" data-tab="diciembre"
+            style="min-height: 48px; max-height: 48px; scroll-snap-align: start;">Diciembre</button>
+        </div>
+
         <!-- Sombreado inferior -->
-        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 12px; background: linear-gradient(to top, rgba(0,0,0,0.06), transparent); pointer-events: none; z-index: 2;"></div>
+        <div
+          style="position: absolute; bottom: 0; left: 0; right: 0; height: 12px; background: linear-gradient(to top, rgba(0,0,0,0.06), transparent); pointer-events: none; z-index: 2;">
+        </div>
       </div>
       <div style="margin-top: auto; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-bottom: 10px;">
-        <button class="tab-button" data-tab="year-selection" id="sidebar-year-button" style="display: flex; align-items: center; gap: 10px;">
+        <button class="tab-button" data-tab="year-selection" id="sidebar-year-button"
+          style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 14px; color: #4b5563; font-weight: 500;">Año Seleccionado</span>
-          <span id="sidebar-year-display" style="font-size: 11px; color: #4b5563; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 5px; padding: 2px 6px; font-weight: 700;">####</span>
+          <span id="sidebar-year-display"
+            style="font-size: 11px; color: #4b5563; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 5px; padding: 2px 6px; font-weight: 700;">####</span>
         </button>
         <button class="tab-button" data-tab="ajustes">Ajustes ⚙</button>
       </div>
@@ -300,7 +340,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <div>
             <h2 style="margin: 0 0 4px 0; font-size: 22px; font-weight: 700; color: #1f2937;">Fondos y Objetivos</h2>
-            <p style="margin: 0; font-size: 13px; color: #6b7280;">Gestiona tus objetivos de inversión y seguimiento de metas.</p>
+            <p style="margin: 0; font-size: 13px; color: #6b7280;">Gestiona tus objetivos de inversión y seguimiento de
+              metas.</p>
           </div>
         </div>
 
@@ -310,7 +351,8 @@
             <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #374151;">🎯 Objetivos de Inversión</h3>
             <button onclick="openNewGoalModal()" aria-label="Crear nuevo objetivo de ahorro"
               style="display: flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 13px; font-weight: 600; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s;"
-              onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">+ Nuevo Objetivo</button>
+              onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">+ Nuevo
+              Objetivo</button>
           </div>
           <div class="investment-goals-grid" id="investment-goals-container"></div>
         </div>
@@ -414,15 +456,15 @@
                 <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px; margin-top: 0;">Reparte un ingreso
                   uniformemente a lo largo de varios meses definidos.</p>
 
-                <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
-                  <div style="width: 110px;">
+                <div style="display: flex; gap: 40px; align-items: flex-end; flex-wrap: wrap;">
+                  <div style="width: 200px;">
                     <label
                       style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Total
                       Ingreso (€)</label>
                     <input id="beca-amount" type="number" min="0" step="0.01"
                       style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                   </div>
-                  <div style="width: 110px;">
+                  <div style="width: 200px;">
                     <label
                       style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Mes
                       inicio</label>
@@ -442,13 +484,14 @@
                       <option value="diciembre">Diciembre</option>
                     </select>
                   </div>
-                  <div style="width: 80px;">
-                    <label style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Nº
+                  <div style="width: 120px;">
+                    <label
+                      style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Nº
                       Meses</label>
                     <input id="beca-months" type="number" min="1" step="1"
                       style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                   </div>
-                  <div style="width: 90px;">
+                  <div style="width: 160px;">
                     <button id="beca-register"
                       style="padding: 8px 0; font-size: 13px; font-weight: 600; line-height: normal; margin: 0; width: 100%; box-sizing: border-box; height: 35px;">Registrar</button>
                   </div>
@@ -461,18 +504,19 @@
                   <input type="text" id="special-mode-savings-name" value="Modo Vivir de ahorros"
                     style="font-weight: 600; font-size: 14px; border: none; background: transparent; width: 100%; max-width: 250px; color: #111827; outline: none; border-bottom: 1px dashed #d1d5db; padding-bottom: 2px;">
                 </div>
-                <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px; margin-top: 0;">Permite inyectar dinero en
+                <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px; margin-top: 0;">Permite inyectar dinero
+                  en
                   un mes determinado tomado del propio fondo global de ahorros.</p>
 
-                <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
-                  <div style="width: 110px;">
+                <div style="display: flex; gap: 40px; align-items: flex-end; flex-wrap: wrap;">
+                  <div style="width: 200px;">
                     <label
                       style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Cantidad
                       (€)</label>
                     <input id="savings-withdrawal-amount" type="number" min="0" step="0.01"
                       style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                   </div>
-                  <div style="width: 110px;">
+                  <div style="width: 200px;">
                     <label
                       style="display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px;">Mes
                       destino</label>
@@ -492,7 +536,7 @@
                       <option value="diciembre">Diciembre</option>
                     </select>
                   </div>
-                  <div style="width: 90px;">
+                  <div style="width: 160px;">
                     <button id="savings-withdrawal-register"
                       style="padding: 8px 0; font-size: 13px; font-weight: 600; line-height: normal; margin: 0; width: 100%; box-sizing: border-box; height: 35px;">Registrar</button>
                   </div>
@@ -508,125 +552,130 @@
       <div id="year-selection" class="tab-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
           <h2 style="margin: 0;">Seleccionar Año Activo</h2>
-          <button onclick="openNewYearModal()" style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#2563eb';" onmouseout="this.style.background='#3b82f6';">
+          <button onclick="openNewYearModal()"
+            style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+            onmouseover="this.style.background='#2563eb';" onmouseout="this.style.background='#3b82f6';">
             <span>+ Añadir Año</span>
           </button>
         </div>
-        <div id="year-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+        <div id="year-list"
+          style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
           <!-- Years render by JS -->
         </div>
       </div>
 
 
 
-  <!-- New Goal Modal -->
-  <div class="modal-overlay" id="new-goal-modal">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <h3 id="modal-title">Nuevo Objetivo</h3>
-      <div class="modal-form">
-        <input type="text" id="new-goal-name" placeholder="Nombre del objetivo (ej: Vacaciones)">
-        <input type="number" id="new-goal-amount" placeholder="Cantidad objetivo (€)" step="0.01" min="0">
+      <!-- New Goal Modal -->
+      <div class="modal-overlay" id="new-goal-modal">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <h3 id="modal-title">Nuevo Objetivo</h3>
+          <div class="modal-form">
+            <input type="text" id="new-goal-name" placeholder="Nombre del objetivo (ej: Vacaciones)">
+            <input type="number" id="new-goal-amount" placeholder="Cantidad objetivo (€)" step="0.01" min="0">
+          </div>
+          <div class="modal-actions">
+            <button onclick="createInvestmentGoal()">Crear</button>
+            <button class="btn-cancel" onclick="closeNewGoalModal()">Cancelar</button>
+          </div>
+        </div>
       </div>
-      <div class="modal-actions">
-        <button onclick="createInvestmentGoal()">Crear</button>
-        <button class="btn-cancel" onclick="closeNewGoalModal()">Cancelar</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Edit Goal Modal -->
-  <div class="modal-overlay" id="edit-goal-modal">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
-      <h3 id="edit-modal-title">Editar Fondo</h3>
-      <div class="modal-form">
-        <input type="text" id="edit-goal-name" placeholder="Nombre del fondo">
-        <input type="number" id="edit-goal-amount" placeholder="Cantidad objetivo (€)" step="0.01" min="0">
-        <input type="hidden" id="edit-goal-id">
+      <!-- Edit Goal Modal -->
+      <div class="modal-overlay" id="edit-goal-modal">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+          <h3 id="edit-modal-title">Editar Fondo</h3>
+          <div class="modal-form">
+            <input type="text" id="edit-goal-name" placeholder="Nombre del fondo">
+            <input type="number" id="edit-goal-amount" placeholder="Cantidad objetivo (€)" step="0.01" min="0">
+            <input type="hidden" id="edit-goal-id">
+          </div>
+          <div class="modal-actions">
+            <button onclick="saveEditedGoal()">Guardar</button>
+            <button class="btn-cancel" onclick="closeEditGoalModal()">Cancelar</button>
+          </div>
+        </div>
       </div>
-      <div class="modal-actions">
-        <button onclick="saveEditedGoal()">Guardar</button>
-        <button class="btn-cancel" onclick="closeEditGoalModal()">Cancelar</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Custom Fund Modal -->
-  <div class="modal-overlay" id="custom-fund-modal">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="custom-fund-modal-title">
-      <h3 id="custom-fund-modal-title">Nuevo Fondo de Ahorro</h3>
-      <div class="modal-form">
-        <input type="text" id="custom-fund-name" placeholder="Nombre (ej: Efectivo, Banco)">
-        <input type="number" id="custom-fund-amount" placeholder="Efectivo inicial / Saldo (€)" step="0.01" min="0">
-        <label
-          style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; margin-top: 5px; color: #374151;">
-          <input type="checkbox" id="custom-fund-default" style="width: auto;">
-          Fondo por defecto (recibe ahorros dinámicos)
-        </label>
-        <input type="hidden" id="custom-fund-id">
+      <!-- Custom Fund Modal -->
+      <div class="modal-overlay" id="custom-fund-modal">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="custom-fund-modal-title">
+          <h3 id="custom-fund-modal-title">Nuevo Fondo de Ahorro</h3>
+          <div class="modal-form">
+            <input type="text" id="custom-fund-name" placeholder="Nombre (ej: Efectivo, Banco)">
+            <input type="number" id="custom-fund-amount" placeholder="Efectivo inicial / Saldo (€)" step="0.01" min="0">
+            <label
+              style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; margin-top: 5px; color: #374151;">
+              <input type="checkbox" id="custom-fund-default" style="width: auto;">
+              Fondo por defecto (recibe ahorros dinámicos)
+            </label>
+            <input type="hidden" id="custom-fund-id">
+          </div>
+          <div class="modal-actions">
+            <button onclick="saveCustomFund()">Guardar</button>
+            <button class="btn-cancel" onclick="closeCustomFundModal()">Cancelar</button>
+          </div>
+        </div>
       </div>
-      <div class="modal-actions">
-        <button onclick="saveCustomFund()">Guardar</button>
-        <button class="btn-cancel" onclick="closeCustomFundModal()">Cancelar</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- New Year Modal -->
-  <div class="modal-overlay" id="new-year-modal">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="year-modal-title">
-      <h3 id="year-modal-title">Añadir Año</h3>
-      <div class="modal-form">
-        <input type="number" id="new-year-input" placeholder="Ej: 2024" min="2000" max="2100">
+      <!-- New Year Modal -->
+      <div class="modal-overlay" id="new-year-modal">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="year-modal-title">
+          <h3 id="year-modal-title">Añadir Año</h3>
+          <div class="modal-form">
+            <input type="number" id="new-year-input" placeholder="Ej: 2024" min="2000" max="2100">
+          </div>
+          <div class="modal-actions">
+            <button onclick="createNewYear()">Añadir</button>
+            <button class="btn-cancel" onclick="closeNewYearModal()">Cancelar</button>
+          </div>
+        </div>
       </div>
-      <div class="modal-actions">
-        <button onclick="createNewYear()">Añadir</button>
-        <button class="btn-cancel" onclick="closeNewYearModal()">Cancelar</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Edit Year Modal -->
-  <div class="modal-overlay" id="edit-year-modal">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-year-modal-title">
-      <h3 id="edit-year-modal-title">Editar Año</h3>
-      <div class="modal-form">
-        <input type="hidden" id="edit-year-old">
-        <input type="number" id="edit-year-input" placeholder="Ej: 2024" min="2000" max="2100">
+      <!-- Edit Year Modal -->
+      <div class="modal-overlay" id="edit-year-modal">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-year-modal-title">
+          <h3 id="edit-year-modal-title">Editar Año</h3>
+          <div class="modal-form">
+            <input type="hidden" id="edit-year-old">
+            <input type="number" id="edit-year-input" placeholder="Ej: 2024" min="2000" max="2100">
+          </div>
+          <div class="modal-actions">
+            <button onclick="saveEditedYear()">Guardar</button>
+            <button class="btn-cancel" onclick="closeEditYearModal()">Cancelar</button>
+          </div>
+        </div>
       </div>
-      <div class="modal-actions">
-        <button onclick="saveEditedYear()">Guardar</button>
-        <button class="btn-cancel" onclick="closeEditYearModal()">Cancelar</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Delete Year Modal -->
-  <div class="modal-overlay" id="delete-year-modal">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-year-modal-title">
-      <h3 id="delete-year-modal-title" style="color: #ef4444;">Eliminar Año</h3>
-      <div class="modal-form">
-        <p style="margin-bottom: 20px; font-size: 15px; color: #4b5563;" id="delete-year-message"></p>
-        <input type="hidden" id="delete-year-target">
+      <!-- Delete Year Modal -->
+      <div class="modal-overlay" id="delete-year-modal">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-year-modal-title">
+          <h3 id="delete-year-modal-title" style="color: #ef4444;">Eliminar Año</h3>
+          <div class="modal-form">
+            <p style="margin-bottom: 20px; font-size: 15px; color: #4b5563;" id="delete-year-message"></p>
+            <input type="hidden" id="delete-year-target">
+          </div>
+          <div class="modal-actions">
+            <button onclick="confirmDeleteYear()" style="background-color: #ef4444; color: white;">Sí, eliminar</button>
+            <button class="btn-cancel" onclick="closeDeleteYearModal()">Cancelar</button>
+          </div>
+        </div>
       </div>
-      <div class="modal-actions">
-        <button onclick="confirmDeleteYear()" style="background-color: #ef4444; color: white;">Sí, eliminar</button>
-        <button class="btn-cancel" onclick="closeDeleteYearModal()">Cancelar</button>
+
+      <!-- Year Context Menu -->
+      <div id="year-context-menu" class="goal-options-menu"
+        style="position: fixed; z-index: 9999; right: auto; top: auto; margin: 0; min-width: 130px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+        <button onclick="handleCtxEditYear()"
+          style="padding: 10px 15px; width: 100%; text-align: left; background: transparent; border: none; border-bottom: 1px solid #e5e7eb; cursor: pointer; color: #4b5563; font-weight: bold; font-size: 13px;"
+          onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">✎
+          Editar</button>
+        <button onclick="handleCtxDeleteYear()"
+          style="padding: 10px 15px; width: 100%; text-align: left; background: transparent; border: none; cursor: pointer; color: #ef4444; font-weight: bold; font-size: 13px;"
+          onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">✕
+          Eliminar</button>
       </div>
-    </div>
-  </div>
 
-  <!-- Year Context Menu -->
-  <div id="year-context-menu" class="goal-options-menu"
-    style="position: fixed; z-index: 9999; right: auto; top: auto; margin: 0; min-width: 130px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
-    <button onclick="handleCtxEditYear()"
-      style="padding: 10px 15px; width: 100%; text-align: left; background: transparent; border: none; border-bottom: 1px solid #e5e7eb; cursor: pointer; color: #4b5563; font-weight: bold; font-size: 13px;"
-      onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">✎ Editar</button>
-    <button onclick="handleCtxDeleteYear()"
-      style="padding: 10px 15px; width: 100%; text-align: left; background: transparent; border: none; cursor: pointer; color: #ef4444; font-weight: bold; font-size: 13px;"
-      onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">✕ Eliminar</button>
-  </div>
-
-  <script src="renderer.js"></script>
+      <script src="renderer.js"></script>
 </body>
 
 </html>
