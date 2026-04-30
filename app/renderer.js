@@ -443,7 +443,7 @@ function renderIncomeModeSelectors() {
     }
 
     updateBudgetAllocations(month);
-    updateIncomeDisplay(month);
+    updateMonthlyDashboard(month);
   });
   updateSavingsChart();
 }
@@ -551,7 +551,7 @@ function addIncome(month) {
 
   budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
 
-  updateIncomeDisplay(month);
+  updateMonthlyDashboard(month);
   updateBudgetAllocations(month);
 
   amountInput.value = '';
@@ -640,7 +640,7 @@ function addExpense(month, type) {
     }
   }
 
-  updateExpenseDisplay(month);
+  updateMonthlyDashboard(month);
 
   amountInput.value = '';
   if (type !== 'investment') {
@@ -656,12 +656,6 @@ function addExpense(month, type) {
   updateCategoryAutocomplete();
 }
 
-function updateIncomeDisplay(month) {
-  const budget = monthlyBudgets[month];
-  const incomeEl = document.getElementById(`${month}-income-total`);
-  if (incomeEl) incomeEl.textContent = `€${budget.totalIncome.toFixed(2)}`;
-  renderTransactionTable(month);
-}
 
 
 
@@ -799,6 +793,10 @@ function createCategoryCharts(month) {
 // ─── Unified Monthly Update ──────────────────────────────────────────────────
 function updateMonthlyDashboard(month) {
   const budget = monthlyBudgets[month];
+
+  // Update total income display
+  const incomeEl = document.getElementById(`${month}-income-total`);
+  if (incomeEl) incomeEl.textContent = `€${budget.totalIncome.toFixed(2)}`;
 
   const monthlyUsed    = budget.expenses.filter(e => e.type === 'monthly').reduce((s, e) => s + e.amount, 0);
   const personalUsed   = budget.expenses.filter(e => e.type === 'personal').reduce((s, e) => s + e.amount, 0);
@@ -1050,7 +1048,7 @@ window.addTransaction = function(month) {
     budget.incomes.push(incObj);
     if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month });
     budget.totalIncome = budget.incomes.reduce((s, i) => s + i.amount, 0);
-    updateIncomeDisplay(month);
+    updateMonthlyDashboard(month);
     updateBudgetAllocations(month);
     updateSavingsChart();
   } else {
@@ -1088,7 +1086,7 @@ window.addTransaction = function(month) {
     }
     budget.expenses.push(expenseObj);
     if (window.api) window.api.addExpense({ ...expenseObj, year: currentYear, month });
-    updateExpenseDisplay(month);
+    updateMonthlyDashboard(month);
     updateSavingsChart();
     updateCategoryAutocomplete();
   }
@@ -1120,7 +1118,7 @@ function deleteIncome(month, index) {
   budget.incomes.splice(index, 1);
   budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
 
-  updateIncomeDisplay(month);
+  updateMonthlyDashboard(month);
   updateBudgetAllocations(month);
   updateSavingsChart();
 }
@@ -1149,7 +1147,7 @@ function deleteExpense(month, index) {
   if (window.api && expense.id) window.api.deleteExpense(expense.id);
   budget.expenses.splice(index, 1);
 
-  updateExpenseDisplay(month);
+  updateMonthlyDashboard(month);
   updateSavingsChart();
   updateCategoryAutocomplete();
 }
@@ -2288,7 +2286,7 @@ function registerBeca() {
     if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month: targetMonth });
 
     budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
-    updateIncomeDisplay(targetMonth);
+    updateMonthlyDashboard(targetMonth);
     updateBudgetAllocations(targetMonth);
     monthsUpdated++;
   }
@@ -2337,7 +2335,7 @@ function registerSavingsWithdrawal() {
   if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month: destMonth });
 
   budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
-  updateIncomeDisplay(destMonth);
+  updateMonthlyDashboard(destMonth);
   updateBudgetAllocations(destMonth);
   updateSavingsChart();
 
