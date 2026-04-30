@@ -422,12 +422,18 @@ function renderIncomeModeSelectors() {
   const modes = getSavingsModes();
   MONTHS.forEach((month) => {
     const select = document.getElementById(`${month}-income-mode`);
+    
+    // Always calculate budgets, even if the select element is missing in some view
+    updateBudgetAllocations(month);
+
     if (!select) return;
+
     let current = getMonthModeSelection(month);
     if (!current) {
       current = modes[0]?.id || '';
       if (current) setMonthModeSelection(month, current);
     }
+    
     select.innerHTML = `
       ${modes.map(m => `<option value="${m.id}">${m.name || 'Perfil sin nombre'}</option>`).join('')}
     `;
@@ -442,7 +448,6 @@ function renderIncomeModeSelectors() {
       select.__bound = true;
     }
 
-    updateBudgetAllocations(month);
     updateMonthlyDashboard(month);
   });
   updateSavingsChart();
@@ -720,15 +725,24 @@ function createCategoryCharts(month) {
       catMap[cat] = (catMap[cat] || 0) + e.amount;
     });
 
+    const used = expenses.reduce((s, e) => s + e.amount, 0);
+    const available = Math.max(0, totalBudget - used);
+
     let labels = Object.keys(catMap);
-    if (labels.length === 0) {
+    if (labels.length === 0 && available <= 0) {
       catMap['Sin datos'] = 1;
       labels = ['Sin datos'];
+    } else {
+      if (available > 0.01) {
+        catMap['Disponible'] = available;
+        if (!labels.includes('Disponible')) labels.push('Disponible');
+      }
     }
 
     const data   = labels.map(l => catMap[l]);
     const colors = labels.map(l => {
       if (l === 'Sin datos') return '#f3f4f6';
+      if (l === 'Disponible') return '#f3f4f6'; // Mismo color suave para lo disponible
       return getCategoryColor(l);
     });
 
@@ -1048,8 +1062,8 @@ window.addTransaction = function(month) {
     budget.incomes.push(incObj);
     if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month });
     budget.totalIncome = budget.incomes.reduce((s, i) => s + i.amount, 0);
-    updateMonthlyDashboard(month);
     updateBudgetAllocations(month);
+    updateMonthlyDashboard(month);
     updateSavingsChart();
   } else {
     const budget = monthlyBudgets[month];
