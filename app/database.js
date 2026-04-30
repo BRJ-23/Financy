@@ -77,6 +77,15 @@ function inicializarTablas(db) {
   // Migraciones (añadir columna date si no existe)
   try { db.exec('ALTER TABLE incomes ADD COLUMN date TEXT'); } catch (e) {}
   try { db.exec('ALTER TABLE expenses ADD COLUMN date TEXT'); } catch (e) {}
+
+  // Índices para consultas frecuentes
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_incomes_year ON incomes(year);
+    CREATE INDEX IF NOT EXISTS idx_expenses_year ON expenses(year);
+    CREATE INDEX IF NOT EXISTS idx_goal_tx_goalId ON goal_transactions(goalId);
+    CREATE INDEX IF NOT EXISTS idx_fund_tx_fundId ON fund_transactions(fundId);
+    CREATE INDEX IF NOT EXISTS idx_global_withdrawals_year ON global_withdrawals(year);
+  `);
 }
 
 // =======================
@@ -229,16 +238,21 @@ function addCustomFund(db, fund) {
 }
 
 function updateCustomFund(db, fund) {
-  if (fund.isDefault) {
-    db.prepare('UPDATE custom_funds SET isDefault = 0').run();
-  }
-  db.prepare(
-    'UPDATE custom_funds SET name = ?, amount = ?, isDefault = ? WHERE id = ?'
-  ).run(fund.name, fund.amount, fund.isDefault ? 1 : 0, fund.id);
+  db.transaction(() => {
+    if (fund.isDefault) {
+      db.prepare('UPDATE custom_funds SET isDefault = 0').run();
+    }
+    db.prepare(
+      'UPDATE custom_funds SET name = ?, amount = ?, isDefault = ? WHERE id = ?'
+    ).run(fund.name, fund.amount, fund.isDefault ? 1 : 0, fund.id);
+  })();
 }
 
 function deleteCustomFund(db, id) {
-  db.prepare('DELETE FROM custom_funds WHERE id = ?').run(id);
+  db.transaction(() => {
+    db.prepare('DELETE FROM fund_transactions WHERE fundId = ?').run(id);
+    db.prepare('DELETE FROM custom_funds WHERE id = ?').run(id);
+  })();
 }
 
 // =======================

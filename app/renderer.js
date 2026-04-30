@@ -1,6 +1,24 @@
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function safeIpc(promise) {
+  if (promise && promise.catch) promise.catch(err => console.error('IPC Error:', err));
+}
+
+// ─── Estado Global ───────────────────────────────────────────────────────────
+
 let currentYear = new Date().getFullYear();
 let availableYears = [];
 let APP_SETTINGS = {};
+
+// ─── Utilidades de Color ─────────────────────────────────────────────────────
+
 function getCategoryColor(category) {
   if (!category || category === 'Disponible') return '#f3f4f6';
   if (category === 'Sin Categoría' || category === 'Sin nombre') return '#e5e7eb';
@@ -39,11 +57,8 @@ let investmentGoals = [];
 let globalSavingsWithdrawals = [];
 let savingsChart = null;
 let cumulativeChart = null;
-let activeChartIndex = 0; // Historically: 0 = monthly savings, 1 = cumulative (deprecated)
 let validationMessageTimeout = null;
 let customFunds = [];
-
-// Las funciones getCustomFunds y saveCustomFunds han sido reemplazadas por la API de SQLite
 
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -217,14 +232,14 @@ function handleCtxDeleteYear() {
   }
 }
 
-function selectYear(year) {
+async function selectYear(year) {
   if (currentYear === year) {
     const mainTabBtn = document.querySelector('.tab-button[data-tab="main"]');
     if (mainTabBtn) mainTabBtn.click();
     return;
   }
   
-  loadYearData(year);
+  await loadYearData(year);
   renderYearSidebar();
 
   initializeMonthlyTabs();
@@ -497,13 +512,11 @@ window.navigateMonth = function(direction) {
 };
 
 function initializeMonthlyTabs() {
-  const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
   const template = document.getElementById('month-tab-template');
   if (!template) return;
 
-  months.forEach(month => {
+  MONTHS.forEach(month => {
     const tabContent = document.getElementById(month);
     if (!tabContent) return;
 
@@ -525,143 +538,17 @@ function initializeMonthlyTabs() {
 }
 
 
-function addIncome(month) {
-  const amountInput = document.getElementById(`${month}-income-amount`);
-  const descriptionInput = document.getElementById(`${month}-income-description`);
-  const destSelect = document.getElementById(`${month}-income-dest`);
+// ─── Presupuestos y Asignaciones ─────────────────────────────────────────────
 
-  const amount = parseFloat(amountInput.value) || 0;
-  const description = descriptionInput.value.trim();
-  const dest = destSelect ? destSelect.value : 'reparto';
-  let destLabel = 'Reparto';
-  if (destSelect && destSelect.selectedIndex >= 0) {
-    destLabel = destSelect.options[destSelect.selectedIndex].text;
-  }
-
-  if (amount <= 0) {
-    showValidationMessage('Por favor, ingrese una cantidad válida');
-    return;
-  }
-
-  if (!description) {
-    showValidationMessage('Por favor, ingrese una descripción');
-    return;
-  }
-
-  const budget = monthlyBudgets[month];
-  const id = 'inc-' + Math.random().toString(36).substr(2, 9);
-  const incObj = { id, amount, description, dest, destLabel };
-  budget.incomes.push(incObj);
-  if (window.api) window.api.addIncome({ ...incObj, year: currentYear, month });
-
-  budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
-
-  updateMonthlyDashboard(month);
-  updateBudgetAllocations(month);
-
-  amountInput.value = '';
-  descriptionInput.value = '';
-  if (destSelect) destSelect.value = 'reparto';
-
-  updateSavingsChart();
+// Helper: calcula gastos usados por tipo para evitar recálculos repetitivos
+function getExpenseUsage(budget) {
+  const monthlyUsed = budget.expenses.filter(e => e.type === 'monthly').reduce((s, e) => s + e.amount, 0);
+  const personalUsed = budget.expenses.filter(e => e.type === 'personal').reduce((s, e) => s + e.amount, 0);
+  const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((s, e) => s + e.amount, 0);
+  return { monthlyUsed, personalUsed, investmentUsed };
 }
 
-function addExpense(month, type) {
-  const amountInput = document.getElementById(`${month}-${type}-amount`);
-  const descriptionInput = document.getElementById(`${month}-${type}-description`);
-  const categoryInput = document.getElementById(`${month}-${type}-category`);
-
-  const amount = parseFloat(amountInput.value) || 0;
-
-  let description = '';
-  let goalId = null;
-
-  if (type === 'investment' && descriptionInput.tagName === 'SELECT') {
-    goalId = descriptionInput.value;
-    description = goalId ? descriptionInput.options[descriptionInput.selectedIndex].text : '';
-  } else {
-    description = descriptionInput.value.trim();
-  }
-
-  if (amount <= 0) {
-    showValidationMessage('Por favor, ingrese una cantidad válida');
-    return;
-  }
-
-  if (!description || (type === 'investment' && !goalId)) {
-    showValidationMessage(type === 'investment' ? 'Por favor, selecciona un fondo' : 'Por favor, ingrese una descripción');
-    return;
-  }
-
-  const budget = monthlyBudgets[month];
-  let budgetLimit = 0;
-
-  if (type === 'monthly') budgetLimit = budget.monthlyExpenses;
-  else if (type === 'personal') budgetLimit = budget.personalExpenses;
-  else if (type === 'investment') budgetLimit = budget.investments;
-
-  const currentExpenses = budget.expenses.filter(e => e.type === type).reduce((sum, e) => sum + e.amount, 0);
-
-  if (currentExpenses + amount > budgetLimit) {
-    showValidationMessage(`Este gasto excede el presupuesto disponible. Disponible: €${(budgetLimit - currentExpenses).toFixed(2)}`);
-    return;
-  }
-
-  const expenseObj = {
-    type,
-    amount,
-    description,
-    id: 'exp-' + Math.random().toString(36).substr(2, 9)
-  };
-
-  if (type === 'monthly' || type === 'personal') {
-    expenseObj.category = categoryInput && categoryInput.value.trim() ? categoryInput.value.trim() : 'Sin Categoría';
-  }
-  if (type === 'investment') {
-    expenseObj.goalId = goalId;
-  }
-
-  budget.expenses.push(expenseObj);
-  if (window.api) window.api.addExpense({ ...expenseObj, year: currentYear, month });
-
-  if (type === 'investment' && goalId) {
-    const goal = investmentGoals.find(g => g.id === goalId);
-    if (goal) {
-      if (!goal.transactions) goal.transactions = [];
-      const tx = {
-        id: expenseObj.id,
-        amount: amount,
-        description: `Aportación desde ${month}`,
-        date: new Date().toISOString(),
-        isLinkedExpense: true
-      };
-      goal.transactions.push(tx);
-      goal.currentAmount += amount;
-      if (window.api) {
-        window.api.addGoalTransaction({ ...tx, goalId: goal.id });
-        window.api.updateGoal({ ...goal, year: currentYear });
-      }
-      renderInvestmentGoals();
-    }
-  }
-
-  updateMonthlyDashboard(month);
-
-  amountInput.value = '';
-  if (type !== 'investment') {
-    descriptionInput.value = '';
-  } else {
-    descriptionInput.value = ''; // resets select to empty
-  }
-  if (categoryInput) {
-    categoryInput.value = '';
-  }
-
-  updateSavingsChart();
-  updateCategoryAutocomplete();
-}
-
-
+// Legacy addIncome/addExpense removed — replaced by addTransaction()
 
 
 
@@ -812,9 +699,7 @@ function updateMonthlyDashboard(month) {
   const incomeEl = document.getElementById(`${month}-income-total`);
   if (incomeEl) incomeEl.textContent = `€${budget.totalIncome.toFixed(2)}`;
 
-  const monthlyUsed    = budget.expenses.filter(e => e.type === 'monthly').reduce((s, e) => s + e.amount, 0);
-  const personalUsed   = budget.expenses.filter(e => e.type === 'personal').reduce((s, e) => s + e.amount, 0);
-  const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((s, e) => s + e.amount, 0);
+  const { monthlyUsed, personalUsed, investmentUsed } = getExpenseUsage(budget);
 
   const monthlyLeftover    = Math.max(0, budget.monthlyExpenses - monthlyUsed);
   const personalLeftover   = Math.max(0, budget.personalExpenses - personalUsed);
@@ -875,9 +760,10 @@ function updateDoughnutLegends(month) {
     }
     el.innerHTML = entries.map(([cat, amt]) => {
       const color = getCategoryColor(cat);
+      const safeCat = escapeHtml(cat);
       return `<div class="legend-item">
         <span class="legend-dot" style="background:${color}"></span>
-        <span class="legend-label" title="${cat}">${cat}</span>
+        <span class="legend-label" title="${safeCat}">${safeCat}</span>
         <span class="legend-value">€${amt.toFixed(2)}</span>
       </div>`;
     }).join('');
@@ -983,17 +869,17 @@ function renderTransactionTable(month) {
     }
 
     // Detail/Category styling as badge if expense
-    let detailHtml = row.detail;
+    const safeDetail = escapeHtml(row.detail);
+    let detailHtml = safeDetail;
     if (row.kind === 'monthly' || row.kind === 'personal') {
       const catColor = getCategoryColor(row.detail);
-      // Para el texto usamos una versión más oscura del color (L: 40% en lugar de 80%)
       const textColor = catColor.replace('80%)', '40%)');
-      detailHtml = `<span class="tx-cat-badge" style="background:${catColor}; color:${textColor}; border-color:${textColor}30;">${row.detail}</span>`;
+      detailHtml = `<span class="tx-cat-badge" style="background:${catColor}; color:${textColor}; border-color:${textColor}30;">${safeDetail}</span>`;
     }
 
     return `<tr class="tx-row">
       <td class="col-date tx-date">${dateStr}</td>
-      <td class="col-desc tx-desc">${row.description}</td>
+      <td class="col-desc tx-desc">${escapeHtml(row.description)}</td>
       <td class="col-amount tx-amount" style="color:${color}">${sign}€${row.amount.toFixed(2)}</td>
       <td class="col-type"><span class="tx-type-badge ${meta.cls}">${meta.label}</span></td>
       <td class="col-detail tx-detail">${detailHtml}</td>
@@ -1127,12 +1013,11 @@ window.deleteExpenseByIndex = function(month, index) {
 function deleteIncome(month, index) {
   const budget = monthlyBudgets[month];
   const inc = budget.incomes[index];
-  if (window.api && inc.id) window.api.deleteIncome(inc.id);
+  if (window.api && inc.id) safeIpc(window.api.deleteIncome(inc.id));
 
   budget.incomes.splice(index, 1);
   budget.totalIncome = budget.incomes.reduce((sum, inc) => sum + inc.amount, 0);
 
-  updateMonthlyDashboard(month);
   updateBudgetAllocations(month);
   updateSavingsChart();
 }
@@ -1302,9 +1187,6 @@ function initializeSavingsChart() {
   window.addEventListener('resize', handleChartResize);
 }
 
-// Switches between chart 0 (monthly) and chart 1 (cumulative)
-
-
 // Calculates cumulative savings per month, starting from prior-year balances
 async function updateCumulativeChart() {
   if (!cumulativeChart) return;
@@ -1400,18 +1282,13 @@ async function updateSavingsChart() {
 
   const savingsData = MONTHS.map(month => {
     const budget = monthlyBudgets[month];
-
     if (budget.totalIncome === 0) return 0;
 
-    const monthlyUsed = budget.expenses.filter(e => e.type === 'monthly').reduce((sum, e) => sum + e.amount, 0);
-    const personalUsed = budget.expenses.filter(e => e.type === 'personal').reduce((sum, e) => sum + e.amount, 0);
-    const investmentUsed = budget.expenses.filter(e => e.type === 'investment').reduce((sum, e) => sum + e.amount, 0);
-
-    const monthlyLeftover = budget.monthlyExpenses - monthlyUsed;
-    const personalLeftover = budget.personalExpenses - personalUsed;
-    const investmentLeftover = budget.investments - investmentUsed;
-
-    return budget.savings + monthlyLeftover + personalLeftover + investmentLeftover;
+    const { monthlyUsed, personalUsed, investmentUsed } = getExpenseUsage(budget);
+    return budget.savings
+      + (budget.monthlyExpenses - monthlyUsed)
+      + (budget.personalExpenses - personalUsed)
+      + (budget.investments - investmentUsed);
   });
 
   savingsChart.data.datasets[0].data = savingsData;
@@ -1419,18 +1296,12 @@ async function updateSavingsChart() {
 
   await updateCumulativeChart();
 
-  saveYearData();
-
   if (typeof updateGlobalSavings === 'function') {
     await updateGlobalSavings();
   }
 }
 
-function saveYearData() {
-  // En la versión SQLite, los datos se guardan individualmente tras cada cambio
-  // mediante window.api.addIncome, addExpense, etc.
-  // Esta función se mantiene para compatibilidad con llamadas existentes.
-}
+// saveYearData() removed — SQLite persists data on each individual operation
 
 async function updateGlobalSavings() {
   let totalAppSavings = 0;
@@ -1549,7 +1420,7 @@ function renderCustomFunds(appSavings = 0) {
         return `
           <div class="goal-transaction-item">
             <div class="date">${dateStr}</div>
-            <div class="desc" title="${t.description}">${t.description}</div>
+            <div class="desc" title="${escapeHtml(t.description)}">${escapeHtml(t.description)}</div>
             <div class="amt ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}</div>
             <button class="delete-item-btn" onclick="deleteTransactionFromFund('${fund.id}', '${t.id}')" title="Eliminar">✕</button>
           </div>
@@ -1563,7 +1434,7 @@ function renderCustomFunds(appSavings = 0) {
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="progress-dot savings-dot"></span>
-              <strong style="color: #374151; font-size: 14px;">${fund.name}</strong>
+              <strong style="color: #374151; font-size: 14px;">${escapeHtml(fund.name)}</strong>
             </div>
             ${fund.isDefault ? '<div style="margin-top: 4px;"><span style="font-size: 10px; background: #d1fae5; color: #047857; padding: 2px 6px; border-radius: 4px;">Por Defecto</span></div>' : ''}
           </div>
@@ -1873,7 +1744,7 @@ function renderInvestmentGoals() {
         return `
           <div class="goal-transaction-item">
             <div class="date">${dateStr}</div>
-            <div class="desc" title="${t.description}">${t.description}</div>
+            <div class="desc" title="${escapeHtml(t.description)}">${escapeHtml(t.description)}</div>
             <div class="amt ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}</div>
             ${canDelete ? `<button class="delete-item-btn" onclick="deleteTransaction('${goal.id}', '${t.id}')" title="Eliminar movimiento">✕</button>` : ''}
           </div>
@@ -1884,7 +1755,7 @@ function renderInvestmentGoals() {
     return `
       <div class="investment-goal-card">
         <h4>
-          <span class="goal-name">${goal.name}</span>
+          <span class="goal-name">${escapeHtml(goal.name)}</span>
           <div class="goal-options-wrapper">
             <button class="goal-options-btn" onclick="toggleGoalOptions('${goal.id}')">☰</button>
             <div id="goal-menu-${goal.id}" class="goal-options-menu">
@@ -1928,23 +1799,6 @@ function renderInvestmentGoals() {
     `;
   }).join('');
 
-  saveYearData();
-  updateInvestmentSelects();
-}
-
-function updateInvestmentSelects() {
-  MONTHS.forEach(month => {
-    const select = document.getElementById(`${month}-investment-description`);
-    if (select && select.tagName === 'SELECT') {
-      const currentVal = select.value;
-      select.innerHTML = '<option value="">Selecciona un fondo...</option>' +
-        investmentGoals.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
-      // Restore previous value if it still exists
-      if (investmentGoals.some(g => g.id === currentVal)) {
-        select.value = currentVal;
-      }
-    }
-  });
 }
 
 async function initializeSettingsUI() {
@@ -2160,8 +2014,6 @@ async function initializeModesUI() {
   renderList();
 }
 
-window.addIncome = addIncome;
-window.addExpense = addExpense;
 window.openNewGoalModal = openNewGoalModal;
 window.closeNewGoalModal = closeNewGoalModal;
 window.createInvestmentGoal = createInvestmentGoal;
