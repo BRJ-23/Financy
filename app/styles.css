@@ -466,6 +466,33 @@ button:hover {
   flex-shrink: 0;
 }
 
+.tx-sign-btn {
+  width: 28px;
+  height: 35px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #ef4444;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.tx-sign-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.tx-sign-btn.positive {
+  color: #10b981;
+}
+
 /* Goal Transactions */
 .goal-transactions {
   margin-top: 15px;

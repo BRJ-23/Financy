@@ -1570,7 +1570,10 @@ function renderCustomFunds(appSavings = 0) {
         
         <div class="goal-add-funds">
           <input type="text" id="fund-tx-desc-${fund.id}" placeholder="Descripción" style="flex: 2;">
-          <input type="number" id="fund-tx-amt-${fund.id}" placeholder="€" step="0.01" style="flex: 1;">
+          <div style="display: flex; flex: 1; align-items: center; gap: 4px;">
+            <button id="cf-sign-${fund.id}" class="tx-sign-btn" onclick="toggleSign('cf-sign-${fund.id}')">-</button>
+            <input type="number" id="fund-tx-amt-${fund.id}" placeholder="€" step="0.01" style="flex: 1; min-width: 0;">
+          </div>
           <button onclick="addTransactionToFund('${fund.id}')" title="Añadir">+</button>
         </div>
         
@@ -1715,8 +1718,15 @@ function createInvestmentGoal() {
 function addFundsToGoal(goalId) {
   const amountInput = document.getElementById(`funds-${goalId}`);
   const descInput = document.getElementById(`funds-desc-${goalId}`);
-  const amount = parseFloat(amountInput.value) || 0;
+  const signBtn = document.getElementById(`goal-sign-${goalId}`);
+  let amount = parseFloat(amountInput.value) || 0;
   const desc = descInput ? descInput.value.trim() : '';
+
+  if (signBtn && signBtn.textContent === '-') {
+    amount = -Math.abs(amount);
+  } else {
+    amount = Math.abs(amount);
+  }
 
   if (amount === 0) {
     showValidationMessage('Por favor, ingrese una cantidad distinta de 0');
@@ -1892,7 +1902,10 @@ function renderInvestmentGoals() {
         
         <div class="goal-add-funds">
           <input type="text" id="funds-desc-${goal.id}" placeholder="Descripción" style="flex: 2;">
-          <input type="number" id="funds-${goal.id}" placeholder="€" step="0.01" style="flex: 1;">
+          <div style="display: flex; flex: 1; align-items: center; gap: 4px;">
+            <button id="goal-sign-${goal.id}" class="tx-sign-btn" onclick="toggleSign('goal-sign-${goal.id}')">-</button>
+            <input type="number" id="funds-${goal.id}" placeholder="€" step="0.01" style="flex: 1; min-width: 0;">
+          </div>
           <button onclick="addFundsToGoal('${goal.id}')" title="Añadir Movimiento">+</button>
         </div>
         
@@ -2169,6 +2182,19 @@ window.addTransactionToFund = addTransactionToFund;
 window.deleteTransactionFromFund = deleteTransactionFromFund;
 window.toggleAdvancedFilter = toggleAdvancedFilter;
 
+window.toggleSign = function(buttonId) {
+  const btn = document.getElementById(buttonId);
+  if (!btn) return;
+  const isPos = btn.textContent === '+';
+  if (isPos) {
+    btn.textContent = '-';
+    btn.classList.remove('positive');
+  } else {
+    btn.textContent = '+';
+    btn.classList.add('positive');
+  }
+};
+
 function toggleAdvancedFilter(month) {
   const row = document.getElementById(`${month}-filter-row`);
   if (!row) return;
@@ -2178,8 +2204,15 @@ function toggleAdvancedFilter(month) {
 async function addTransactionToFund(fundId) {
   const descInput = document.getElementById(`fund-tx-desc-${fundId}`);
   const amtInput = document.getElementById(`fund-tx-amt-${fundId}`);
+  const signBtn = document.getElementById(`cf-sign-${fundId}`);
   const description = descInput ? descInput.value.trim() : '';
-  const amount = parseFloat(amtInput ? amtInput.value : '') || 0;
+  let amount = parseFloat(amtInput ? amtInput.value : '') || 0;
+
+  if (signBtn && signBtn.textContent === '-') {
+    amount = -Math.abs(amount);
+  } else {
+    amount = Math.abs(amount);
+  }
 
   if (amount === 0) {
     showValidationMessage('Introduce una cantidad válida'); return;
