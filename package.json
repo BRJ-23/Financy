@@ -1,7 +1,7 @@
 {
   "name": "financy",
   "version": "1.0.0",
-  "description": "",
+  "description": "Aplicación financiera personal",
   "main": "app/main.js",
   "engines": {
     "node": ">=24.0.0"
@@ -12,18 +12,56 @@
   "scripts": {
     "start": "electron .",
     "test": "cross-env ELECTRON_RUN_AS_NODE=1 electron node_modules/jest/bin/jest.js",
-    "postinstall": "electron-rebuild"
+    "postinstall": "electron-rebuild",
+    "dist": "electron-builder"
   },
   "keywords": [],
-  "author": "",
+  "author": "Borja",
   "license": "ISC",
   "devDependencies": {
     "cross-env": "^10.1.0",
     "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
     "electron-rebuild": "^3.2.9",
     "jest": "^30.2.0"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2"
+  },
+  "build": {
+    "appId": "com.brj23.financy",
+    "productName": "Financy",
+    "copyright": "Copyright © 2026 BRJ-23",
+    "directories": {
+      "output": "dist",
+      "buildResources": "app/assets"
+    },
+    "files": [
+      "app/**/*",
+      "!app/assets/**.{psd,ai}",
+      "!**/node_modules/.cache/**"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "app/assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "installerIcon": "app/assets/icon.ico",
+      "uninstallerIcon": "app/assets/icon.ico",
+      "installerHeaderIcon": "app/assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Financy",
+      "runAfterFinish": true
+    }
   }
 }
