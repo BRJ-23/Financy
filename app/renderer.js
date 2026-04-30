@@ -1435,8 +1435,8 @@ function renderCustomFunds(appSavings = 0) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="progress-dot savings-dot"></span>
               <strong style="color: #374151; font-size: 14px;">${escapeHtml(fund.name)}</strong>
+              ${fund.isDefault ? '<span style="font-size: 10px; background: #d1fae5; color: #047857; padding: 2px 6px; border-radius: 4px;">Por Defecto</span>' : ''}
             </div>
-            ${fund.isDefault ? '<div style="margin-top: 4px;"><span style="font-size: 10px; background: #d1fae5; color: #047857; padding: 2px 6px; border-radius: 4px;">Por Defecto</span></div>' : ''}
           </div>
           <div class="goal-options-wrapper" style="margin-top: -4px; margin-right: -4px;">
             <button class="goal-options-btn" onclick="toggleCfOptions('${fund.id}')">☰</button>
